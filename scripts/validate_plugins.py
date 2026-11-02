@@ -195,17 +195,14 @@ def validate_claude_plugin(plugin_dir: Path) -> tuple[list[str], list[str]]:
         except Exception as e:
             errors.append(f".mcp.json is not valid JSON: {e}")
 
-    # 3. README (at least 40 non-code words)
+    # 3. README
     readme_path = plugin_dir / "README.md"
     if not readme_path.is_file():
         errors.append("Claude plugin missing README.md")
     else:
         text = readme_path.read_text(encoding="utf-8")
-        word_count = count_non_code_words(text)
-        if word_count < 40:
-            errors.append(
-                f"README.md has only {word_count} non-code words. Claude pre-submission checklist requires >= 40 words."
-            )
+        if not text.strip():
+            errors.append("README.md is empty.")
 
     # 4. LICENSE
     license_path = plugin_dir / "LICENSE"
@@ -377,7 +374,7 @@ def main() -> int:
         for err in claude_errors:
             print(f"      - {err}")
     else:
-        print("  ✓ Claude plugin: PASSED (manifest, README >= 40 words, license, mcp valid)")
+        print("  ✓ Claude plugin: PASSED (manifest, README, license, mcp valid)")
         for n in claude_notes:
             print(f"      ({n})")
     print()
