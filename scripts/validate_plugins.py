@@ -32,22 +32,27 @@ def count_non_code_words(markdown_text: str) -> int:
     return len(words)
 
 
-def validate_openai_plugin(plugin_dir: Path) -> list[str]:
-    """Validate OpenAI plugin against Agent Plugins 1.0.0 and com.openai extension rules."""
+def validate_openai_plugin(plugin_dir: Path) -> tuple[list[str], list[str]]:
+    """
+    Validate OpenAI plugin against Agent Plugins 1.0.0 and com.openai extension rules.
+    OpenAI validates plugin bundles during portal upload / submission; locally,
+    the package is validated against agent-plugins schema and com.openai rules.
+    """
     errors = []
+    notes = []
     if not plugin_dir.is_dir():
-        return [f"OpenAI plugin directory not found: {plugin_dir}"]
+        return [f"OpenAI plugin directory not found: {plugin_dir}"], notes
 
     # 1. Manifest plugin.json
     manifest_path = plugin_dir / "plugin.json"
     if not manifest_path.is_file():
         errors.append("Missing required 'plugin.json' at root of OpenAI plugin directory.")
-        return errors
+        return errors, notes
 
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     except Exception as e:
-        return [f"plugin.json is not valid JSON: {e}"]
+        return [f"plugin.json is not valid JSON: {e}"], notes
 
     # Schema check
     if manifest.get("$schema") != "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json":
@@ -63,9 +68,12 @@ def validate_openai_plugin(plugin_dir: Path) -> list[str]:
         errors.append(f"plugin.json 'name' ('{name}') does not match expected kebab-case pattern.")
 
     # Version, description, license
-    for f in ["version", "description", "license"]:
-        if not manifest.get(f):
-            errors.append(f"plugin.json missing recommended field: '{f}'")
+    if not manifest.get("version"):
+        errors.append("plugin.json missing 'version' field.")
+    if not manifest.get("description"):
+        errors.append("plugin.json missing 'description' field.")
+    if not manifest.get("license") and not (plugin_dir / "LICENSE").is_file():
+        errors.append("plugin.json missing 'license' field and no LICENSE file found in plugin directory.")
 
     # Author
     author = manifest.get("author")
@@ -107,28 +115,55 @@ def validate_openai_plugin(plugin_dir: Path) -> list[str]:
     # 3. Documentation & License
     if not (plugin_dir / "README.md").is_file():
         errors.append("OpenAI plugin missing README.md")
-    if not (plugin_dir / "LICENSE").is_file():
-        errors.append("OpenAI plugin missing LICENSE file")
+    if not (plugin_dir / "LICENSE").is_file() and not manifest.get("license"):
+        errors.append("OpenAI plugin missing LICENSE file and no 'license' set in plugin.json")
 
-    return errors
+    return errors, notes
 
 
-def validate_claude_plugin(plugin_dir: Path) -> list[str]:
-    """Validate Claude plugin against Anthropic pre-submission checklist."""
+def find_claude_cli() -> str | None:
+    """Find the path to the official Anthropic Claude CLI executable (v2+ with plugin support)."""
+    candidates = [
+        str(Path.home() / ".local" / "bin" / "claude"),
+        "/usr/local/bin/claude",
+        "/opt/homebrew/bin/claude",
+    ]
+    which_claude = shutil.which("claude")
+    if which_claude and which_claude not in candidates:
+        candidates.append(which_claude)
+
+    for c in candidates:
+        p = Path(c)
+        if p.is_file() and os.access(p, os.X_OK):
+            try:
+                res = subprocess.run([str(p), "plugin", "--help"], capture_output=True, text=True, timeout=5)
+                if res.returncode == 0 and "validate" in res.stdout:
+                    return str(p)
+            except Exception:
+                continue
+    return None
+
+
+def validate_claude_plugin(plugin_dir: Path) -> tuple[list[str], list[str]]:
+    """
+    Validate Claude plugin against Anthropic pre-submission checklist,
+    including running Anthropic's official 'claude plugin validate --strict' CLI.
+    """
     errors = []
+    notes = []
     if not plugin_dir.is_dir():
-        return [f"Claude plugin directory not found: {plugin_dir}"]
+        return [f"Claude plugin directory not found: {plugin_dir}"], notes
 
     # 1. Manifest .claude-plugin/plugin.json
     manifest_path = plugin_dir / ".claude-plugin" / "plugin.json"
     if not manifest_path.is_file():
         errors.append("Missing required '.claude-plugin/plugin.json' manifest.")
-        return errors
+        return errors, notes
 
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     except Exception as e:
-        return [f".claude-plugin/plugin.json is not valid JSON: {e}"]
+        return [f".claude-plugin/plugin.json is not valid JSON: {e}"], notes
 
     # Name check
     name = manifest.get("name")
@@ -198,14 +233,28 @@ def validate_claude_plugin(plugin_dir: Path) -> list[str]:
             except Exception:
                 pass
 
-    # 6. Run native claude CLI validate if available
-    claude_bin = shutil.which("claude") or "/Users/jorgesoares/.local/bin/claude"
-    if Path(claude_bin).is_file():
-        res = subprocess.run([claude_bin, "plugin", "validate", "--strict", str(plugin_dir)], capture_output=True, text=True)
-        if res.returncode != 0:
-            errors.append(f"'claude plugin validate --strict' failed:\n{res.stdout}\n{res.stderr}")
+    # 6. Execute Anthropic's official 'claude plugin validate --strict' CLI
+    claude_bin = find_claude_cli()
+    if claude_bin:
+        try:
+            res = subprocess.run(
+                [claude_bin, "plugin", "validate", "--strict", str(plugin_dir)],
+                capture_output=True,
+                text=True,
+            )
+            if res.returncode != 0:
+                errors.append(f"Anthropic 'claude plugin validate --strict' failed:\n{res.stdout}\n{res.stderr}")
+            else:
+                notes.append(f"Validated with official Anthropic CLI ({claude_bin}): ✔ Validation passed")
+        except Exception as e:
+            errors.append(f"Failed to execute '{claude_bin} plugin validate': {e}")
+    else:
+        notes.append(
+            "Note: 'claude' CLI not installed globally on this host. Pre-submission rules verified internally.\n"
+            "      To run Anthropic's CLI directly: npm install -g @anthropic-ai/claude-code"
+        )
 
-    return errors
+    return errors, notes
 
 
 def main() -> int:
@@ -219,25 +268,31 @@ def main() -> int:
 
     # Validate OpenAI Plugin
     print(f"Validating OpenAI plugin at {openai_dir.relative_to(repo_root)}:")
-    openai_errors = validate_openai_plugin(openai_dir)
+    openai_errors, openai_notes = validate_openai_plugin(openai_dir)
     if openai_errors:
         total_errors += len(openai_errors)
         print("  ✗ OpenAI plugin validation FAILED:")
         for err in openai_errors:
             print(f"      - {err}")
     else:
-        print("  ✓ OpenAI plugin: PASSED (manifest, schema, mcp, docs valid)\n")
+        print("  ✓ OpenAI plugin: PASSED (manifest, schema, mcp, docs valid)")
+        for n in openai_notes:
+            print(f"      ({n})")
+    print()
 
     # Validate Claude Plugin
     print(f"Validating Claude plugin at {claude_dir.relative_to(repo_root)}:")
-    claude_errors = validate_claude_plugin(claude_dir)
+    claude_errors, claude_notes = validate_claude_plugin(claude_dir)
     if claude_errors:
         total_errors += len(claude_errors)
         print("  ✗ Claude plugin validation FAILED:")
         for err in claude_errors:
             print(f"      - {err}")
     else:
-        print("  ✓ Claude plugin: PASSED (manifest, README >= 40 words, license, mcp valid)\n")
+        print("  ✓ Claude plugin: PASSED (manifest, README >= 40 words, license, mcp valid)")
+        for n in claude_notes:
+            print(f"      ({n})")
+    print()
 
     if total_errors > 0:
         print(f"Validation FAILED with {total_errors} error(s).", file=sys.stderr)

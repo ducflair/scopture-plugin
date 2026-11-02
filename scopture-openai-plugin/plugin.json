@@ -8,6 +8,8 @@
     "url": "https://ducflair.com/"
   },
   "homepage": "https://site.scopture.com/",
+  "repository": "https://github.com/ducflair/scopture-plugin",
+  "license": "MIT",
   "keywords": [
     "design",
     "drawings",

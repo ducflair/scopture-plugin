@@ -35,6 +35,12 @@ jobs:
       - name: Verify tracked docs match remote documentation
         run: python3 scripts/check_docs.py
 
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Validate Claude plugin with Claude CLI
+        run: claude plugin validate --strict ./scopture-claude-plugin
+
       - name: Validate plugins (OpenAI and Claude)
         run: python3 scripts/validate_plugins.py
 
