@@ -4,3 +4,8 @@ __MACOSX/
 *.tar.gz
 dist/
 
+
+skills/duc/docs
+skills/duc/docs-ducpy
+skills/duc/docs-sql
+skills/scopture/docs

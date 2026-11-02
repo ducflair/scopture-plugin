@@ -42,6 +42,8 @@ Agents must adhere strictly to this priority order:
 
 ## Additional Adapter References
 
+For Scopture execution, consult [Python Sandbox](https://site.scopture.com/docs/automation/python-sandbox). `emit_output`, drawing snapshot/patch helpers and `duc_model` imports belong to that host runtime, not standalone `ducpy`.
+
 The general DUC and `ducpy` routes above remain the primary sources. Use these versioned adapter references when a task targets another DUC interface:
 
 - **SQL schema**: `https://ducflair.github.io/duc/reference/sql/`

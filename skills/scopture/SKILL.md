@@ -22,9 +22,30 @@ This skill focuses strictly on **live canvas synchronization**, using the **Scop
 Scopture provides a full Python runtime environment that operates against the **drawing as a whole**. It is **not bound or scoped to any individual element**.
 
 * **Whole-Drawing Operations**: The runtime is not limited to an isolated element or an embedded script container. Code executes with holistic visibility over the entire drawing, able to inspect elements, compute canvas-wide layouts, coordinate alignments, manage layers and groups, and orchestrate complex multi-element assemblies (e.g., schematics, floor plans, structural grids, or multi-view mechanical drawings).
-* **Engineering & Scientific Stack**: The runtime environment includes `numpy`, `scipy`, `sympy`, `pint`, `pandas`, and `matplotlib`. Use them for physical modeling, unit conversions, numerical solvers, and optimization across the canvas, then translate the calculated results directly into coordinated 2D geometry, parametric 3D models, tables, and visual annotations.
+* **Engineering & Scientific Stack**: Use the maintained [Python Sandbox reference](https://site.scopture.com/docs/automation/python-sandbox) for the shared Python 3.12 capability map, output types and embedded helpers. Desktop prefers its managed sandbox even for remote drawings; browser/mobile require an authorized cloud worker. Installed packages do not bypass network/process guards or establish physical validation. Keep reusable geometry in one Model Element and import it into individual studies.
 * **Unified Batch Generation**: A single Python execution can generate, reposition, or update dozens of elements, create layers, instantiate blocks, and update global states in one unified patch.
 * **Execution Surfaces**: This drawing-level runtime environment can be invoked via the Scopture MCP server (`run_python_code`) against an active live canvas, or headlessly via the CLI (`scopture run-python`) against local or remote `.duc` drawings.
+
+---
+
+## Choosing a Geometry Engine
+
+Choose by what the output is for, not only by the object's category. Use the live `run_python_code` tool description for the exact output contract and helper calls.
+
+* **IFC (`ifcopenshell`)**: The result is a building or infrastructure element that needs BIM semantics: walls, slabs, structural frames, doors, windows, building MEP (ducts, pipes, conduit, panels).
+* **`build123d` (default)**: Manufactured or discrete 3D geometry: parts, brackets, assemblies, enclosures, robotics, tooling, electrical hardware such as housings and mounts.
+* **Mixed cases**: Equipment or fittings inside a building follow the deliverable. Use IFC if it must appear in the building model, `build123d` if it is a part to be made. If unclear, ask the user.
+* **`ezdxf`**: Only when DXF itself is needed, such as interchange, CNC or laser paths, or layer-based drafting conventions. For ordinary 2D content on the canvas, use native DUC elements.
+
+> The Python sandbox can produce more than 3D models. Choose the output form by whether the result should stay editable on the canvas.
+
+* **Native DUC elements**: Use for anything the user may select, restyle, or dimension: schematics, wiring diagrams, P&IDs, tables, annotations, and text. Compute with the engineering stack, then emit elements.
+* **Raster images (PNG/JPEG)**: Use for computed, read-only visuals such as matplotlib plots, simulation contours, heatmaps, and renders. PNG for plots and diagrams, JPEG for photographic content.
+* **SVG**: Use when vector fidelity matters but element-by-element editing does not, such as charts or vector artwork. If it needs to stay editable, rebuild it as native elements. Check the `ducsvg` adapter reference for conversion options.
+* **PDF / Typst**: Use for documents such as data sheets, calculation reports, and specification summaries. Typst sources are validated by the sandbox on submit.
+* **Delivery**: Embed files through the patch's `external_files` map and reference them from an element. Follow the live `run_python_code` description for the exact fields.
+
+Stay within the installed stack (`numpy`, `scipy`, `sympy`, `pint`, `pandas`, `matplotlib`, `fluids`). Do not promise FEA, raytraced rendering, or other image libraries unless a job confirms they are installed. Verify results with the Visual QA loop.
 
 ---
 
@@ -55,7 +76,7 @@ The sandbox mounts authorized inputs into a temporary workspace, captures standa
 
 ### Engineering Python Stack
 
-For complex calculations and engineering problem solving, the sandbox includes `numpy`, `scipy`, `sympy`, `pint`, `pandas`, `matplotlib`, and `fluids`. Use them for numerical methods, symbolic derivation, unit-aware calculations, data analysis, plotting, and fluid-system calculations, then translate the result into DUC elements or model geometry.
+For complex calculations, physical simulations, and engineering problem solving, the sandbox includes `numpy`, `scipy`, `sympy`, `pint`, `pandas`, `matplotlib`, and `fluids`. Use them for numerical methods, symbolic derivation, unit-aware calculations, data analysis, simulation contours, plotting, and fluid-system calculations, then translate the results directly into DUC elements, `build123d`/`ifcopenshell`/`ezdxf` geometry, or multi-modal visual artifacts.
 
 ---
 
@@ -75,6 +96,16 @@ Dictionary and file maps merge by key. The current local state is preserved, whi
 For dictionary/object input, use the sandbox serializer's snake_case keys, including `elements`, `blocks`, `block_instances`, `block_collections`, `groups`, `regions`, `layers`, `external_files`, and `duc_global_state`.
 
 Preserve IDs, bindings, memberships, frame/layer relationships, and block-instance data when updating an existing element. Locked plots and their descendants are protected at the server update boundary and cannot be bypassed from Python or SQLite.
+
+## Drawing Target Resolution and Search
+
+1. **Resolve named targets first.** When the user says "in", "inside", or "from" a named drawing, call `list_available_drawings` before querying. Prefer an exact name match and use the resolved `drawingId`; do not assume the active drawing is the target or search all drawings indiscriminately. Ask which drawing if matches remain ambiguous. If no match exists, say the target was not found among available workspace drawings.
+2. **Choose the SQL mode and poll once-submitted jobs.** `run_sqlite` accepts up to 100 `drawingIds` in per-drawing mode, 10 distinct drawings in attached mode, and one drawing in mutate mode. Server jobs queue behind bounded workers; submit once and poll the returned `jobId` with `check_python_run_job`. A pending response is not a reason to resubmit.
+3. **Conclude every search clearly.** Summarize the matches conversationally. For zero results, say: `Nothing found: No elements matching '<query>' were found in '<drawingName>'.`
+
+## Issue and Charter Deletion
+
+You cannot delete Issues or Charter requirements, constraints, or decisions through Scopture automation. If asked to delete them, tell the user they must do it manually in Scopture. Do not bypass this through CLI, SQL, or Python. Close or dismiss an Issue only when that is the requested action.
 
 ---
 

@@ -29,7 +29,7 @@ Drawings can hold thousands of elements. Never print a full `cat` into the conve
 ```bash
 scopture ls model.duc                          # tabular overview
 scopture cat model.duc | grep -i motor | head  # NDJSON stream, one element per line
-scopture elements list model.duc --type model --search "bracket"
+scopture elements list model.duc --element-type model --search "bracket"
 scopture elements get model.duc <element-id>   # full geometry and parametric code
 ```
 
@@ -56,7 +56,7 @@ scopture run-sql model.duc "INSERT INTO layers (id, name, is_visible) VALUES ('l
 
 To create or update drawing state (elements, 2D geometry, parametric 3D models, layers, blocks, or global state), use `scopture run-python`.
 
-This command runs scripts in Scopture's **drawing-level Python runtime environment** (the same runtime accessible via the Scopture MCP server), executing against the drawing as a whole rather than being bound to any single element:
+This command runs scripts in Scopture's **drawing-level Python runtime environment**, using the managed desktop sandbox when available, including for remote drawing IDs. Use `--server` to request cloud execution. Both workers derive from the shared sandbox project; authorization still applies. See [Python Sandbox](https://site.scopture.com/docs/automation/python-sandbox) for embedded methods, engineering capabilities, output kinds and network/process restrictions:
 
 ```bash
 # Execute inline Python script against the drawing
