@@ -121,12 +121,7 @@ def fetch_ducpy_reference(dest_dir: Path) -> int:
     llms_txt = fetch_url(llms_url)
     (dest_dir / "llms.txt").write_text(llms_txt, encoding="utf-8")
 
-    # 2. Fetch llms-full.txt
-    full_url = f"{DUCPY_BASE_URL}llms-full.txt"
-    llms_full = fetch_url(full_url)
-    (dest_dir / "llms-full.txt").write_text(llms_full, encoding="utf-8")
-
-    # 3. Extract individual page links from llms.txt
+    # 2. Extract individual page links from llms.txt
     page_links = re.findall(r"\[([^\]]+)\]\(([^)]+\.html\.md)\)", llms_txt)
     if len(page_links) < 10:
         raise RuntimeError(f"Found only {len(page_links)} page links in ducpy llms.txt.")
@@ -148,7 +143,7 @@ def fetch_ducpy_reference(dest_dir: Path) -> int:
         file_path.parent.mkdir(parents=True, exist_ok=True)
         file_path.write_text(content, encoding="utf-8")
 
-    print(f"    ✓ Added docs-ducpy/llms.txt, llms-full.txt, and {len(results)} module page(s)")
+    print(f"    ✓ Added docs-ducpy/llms.txt and {len(results)} module page(s)")
     return len(results)
 
 
