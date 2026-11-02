@@ -2,7 +2,7 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "scopture",
   "version": "1.2.0",
-  "description": "Connect to Scopture to inspect, analyze, and manage collaborative drawings, models, issues, and project charters.",
+  "description": "Work directly with physical engineering projects in Scopture. Inspect models, drawings, canvas state, and .duc files while keeping the surrounding project context in view. Analyze project data, run Python, create simulations, develop CAD and BIM models, capture screenshots, manage issues and project charters, trace requirements and decisions, and apply changes directly to the work.",
   "author": {
     "name": "Ducflair",
     "url": "https://ducflair.com/"

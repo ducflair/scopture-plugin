@@ -1,0 +1,17 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.ducflair/scopture",
+  "title": "Scopture",
+  "description": "Work on physical engineering projects, inspect CAD/BIM, run simulations, and manage project context",
+  "repository": {
+    "url": "https://github.com/ducflair/scopture-plugin",
+    "source": "github"
+  },
+  "version": "1.2.0",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://api.scopture.com/mcp"
+    }
+  ]
+}

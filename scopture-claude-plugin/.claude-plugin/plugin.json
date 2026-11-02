@@ -10,6 +10,7 @@
   "homepage": "https://site.scopture.com/",
   "repository": "https://github.com/ducflair/scopture-plugin",
   "license": "MIT",
+  "privacyPolicyUrl": "https://site.scopture.com/p/privacy",
   "keywords": [
     "design",
     "drawings",

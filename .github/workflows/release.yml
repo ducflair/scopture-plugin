@@ -41,8 +41,11 @@ jobs:
       - name: Validate Claude plugin with Claude CLI
         run: claude plugin validate --strict ./scopture-claude-plugin
 
-      - name: Validate plugins (OpenAI and Claude)
+      - name: Validate plugins (OpenAI and Claude) and MCP server
         run: python3 scripts/validate_plugins.py
+
+      - name: Validate MCP server against official MCP Registry
+        run: python3 scripts/publish_mcp_registry.py --dry-run
 
   release:
     needs: validate
@@ -52,6 +55,7 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
+      id-token: write
     steps:
       - name: Check out repository with full history
         uses: actions/checkout@v4

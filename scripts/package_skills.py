@@ -301,6 +301,11 @@ def main() -> int:
             created_files.append(claude_zip)
             print(f"  ✓ claude plugin: {claude_zip.name}")
 
+        # 4. Update server.json version if present
+        server_json = repo_root / "server.json"
+        if server_json.is_file():
+            update_json_version(server_json, version)
+
     # Write checksums for all created archives
     checksums_file = out_dir / "checksums.txt"
     checksum_lines = []

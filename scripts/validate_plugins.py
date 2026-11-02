@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-Validates OpenAI and Claude agent plugin packages against official schemas
-and submission guidelines:
+Validates OpenAI, Claude, and Model Context Protocol (MCP) Registry packages
+against official schemas and submission guidelines:
 - OpenAI Plugin: https://developers.openai.com/plugins/build/plugins
 - Claude Plugin: https://claude.com/docs/plugins/pre-submission-checklist
+- MCP Registry: https://registry.modelcontextprotocol.io/
 """
 
 import json
@@ -22,22 +23,15 @@ MAX_FILE_BYTES = 5 * 1024 * 1024  # 5 MiB
 
 def count_non_code_words(markdown_text: str) -> int:
     """Count non-code words in markdown (excluding fenced code blocks and inline code)."""
-    # Remove fenced code blocks
     cleaned = re.sub(r"```[\s\S]*?```", " ", markdown_text)
-    # Remove inline code
     cleaned = re.sub(r"`[^`]+`", " ", cleaned)
-    # Remove HTML tags
     cleaned = re.sub(r"<[^>]+>", " ", cleaned)
     words = re.findall(r"\b[A-Za-z0-9_-]+\b", cleaned)
     return len(words)
 
 
 def validate_openai_plugin(plugin_dir: Path) -> tuple[list[str], list[str]]:
-    """
-    Validate OpenAI plugin against Agent Plugins 1.0.0 and com.openai extension rules.
-    OpenAI validates plugin bundles during portal upload / submission; locally,
-    the package is validated against agent-plugins schema and com.openai rules.
-    """
+    """Validate OpenAI plugin against Agent Plugins 1.0.0 and com.openai extension rules."""
     errors = []
     notes = []
     if not plugin_dir.is_dir():
@@ -145,10 +139,7 @@ def find_claude_cli() -> str | None:
 
 
 def validate_claude_plugin(plugin_dir: Path) -> tuple[list[str], list[str]]:
-    """
-    Validate Claude plugin against Anthropic pre-submission checklist,
-    including running Anthropic's official 'claude plugin validate --strict' CLI.
-    """
+    """Validate Claude plugin against Anthropic pre-submission checklist."""
     errors = []
     notes = []
     if not plugin_dir.is_dir():
@@ -257,12 +248,64 @@ def validate_claude_plugin(plugin_dir: Path) -> tuple[list[str], list[str]]:
     return errors, notes
 
 
+def validate_mcp_registry_server(server_json_path: Path) -> tuple[list[str], list[str]]:
+    """Validate server.json against official Model Context Protocol Registry rules."""
+    errors = []
+    notes = []
+    if not server_json_path.is_file():
+        return errors, notes
+
+    try:
+        data = json.loads(server_json_path.read_text(encoding="utf-8"))
+    except Exception as e:
+        return [f"server.json is not valid JSON: {e}"], notes
+
+    if data.get("$schema") != "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json":
+        errors.append("server.json $schema must be 'https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json'")
+
+    name = data.get("name", "")
+    if not name or "/" not in name:
+        errors.append("server.json 'name' must be namespaced (e.g. 'io.github.org/server' or 'com.domain/server')")
+
+    title = data.get("title")
+    if not title:
+        errors.append("server.json missing 'title'")
+
+    desc = data.get("description", "")
+    if not desc:
+        errors.append("server.json missing 'description'")
+    elif len(desc) > 100:
+        errors.append(f"server.json 'description' exceeds MCP Registry maximum of 100 characters ({len(desc)} chars)")
+
+    if not data.get("version"):
+        errors.append("server.json missing 'version'")
+
+    remotes = data.get("remotes", [])
+    if not remotes and not data.get("packages"):
+        errors.append("server.json must specify either 'remotes' or 'packages'")
+
+    for idx, r in enumerate(remotes):
+        rtype = r.get("type")
+        if rtype not in ("streamable-http", "sse"):
+            errors.append(f"remotes[{idx}] type '{rtype}' must be 'streamable-http' or 'sse'")
+        rurl = r.get("url", "")
+        if not rurl.startswith("https://"):
+            errors.append(f"remotes[{idx}] url must be https://: '{rurl}'")
+
+    mcp_pub = shutil.which("mcp-publisher")
+    if mcp_pub:
+        notes.append(f"mcp-publisher CLI detected ({mcp_pub}). Run 'mcp-publisher validate server.json' for live registry API check.")
+
+    return errors, notes
+
+
 def main() -> int:
     repo_root = Path(__file__).resolve().parent.parent
     openai_dir = repo_root / "scopture-openai-plugin"
     claude_dir = repo_root / "scopture-claude-plugin"
+    server_json_path = repo_root / "server.json"
 
-    print("Validating plugin packages...\n")
+    print("Validating plugin and MCP server packages...\n")
 
     total_errors = 0
 
@@ -294,11 +337,26 @@ def main() -> int:
             print(f"      ({n})")
     print()
 
+    # Validate MCP Registry server.json if present
+    if server_json_path.is_file():
+        print(f"Validating MCP Registry server metadata at {server_json_path.relative_to(repo_root)}:")
+        mcp_errors, mcp_notes = validate_mcp_registry_server(server_json_path)
+        if mcp_errors:
+            total_errors += len(mcp_errors)
+            print("  ✗ MCP Registry server.json validation FAILED:")
+            for err in mcp_errors:
+                print(f"      - {err}")
+        else:
+            print("  ✓ MCP Registry server.json: PASSED (schema, namespace, remotes valid)")
+            for n in mcp_notes:
+                print(f"      ({n})")
+        print()
+
     if total_errors > 0:
         print(f"Validation FAILED with {total_errors} error(s).", file=sys.stderr)
         return 1
 
-    print("All plugins validated successfully!")
+    print("All plugins and MCP server definitions validated successfully!")
     return 0
 
 

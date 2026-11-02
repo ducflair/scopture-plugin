@@ -8,6 +8,7 @@
     "validate:plugins": "python3 scripts/validate_plugins.py",
     "check:docs": "python3 scripts/check_docs.py",
     "package": "python3 scripts/package_skills.py",
+    "publish:mcp": "python3 scripts/publish_mcp_registry.py",
     "remote-docs": "python3 scripts/fetch_docs.py --to-skills --target all",
     "release": "semantic-release"
   },
