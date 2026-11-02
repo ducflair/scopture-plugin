@@ -1,0 +1,29 @@
+# Python (ducpy) (/docs/python/overview)
+
+
+
+## Overview [#overview]
+
+`ducpy` is the official Python SDK for parsing, creating, and manipulating `.duc` files.
+
+***
+
+## Dual API Architecture [#dual-api-architecture]
+
+`ducpy` provides two complementary approaches for working with `.duc` CAD files:
+
+| API Module                                  | Purpose                                                                   | Best for                                                |
+| ------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------- |
+| **Builders DSL** (`ducpy.builders`)         | Fluent, type-safe Python builder classes for elements, styles, and states | Constructing elements and documents programmatically    |
+| **`DucSQL`** (`ducpy.builders.sql_builder`) | Direct SQLite database connection and SQL query execution                 | Batch inserts, direct schema introspection, FTS queries |
+
+***
+
+## Package Architecture [#package-architecture]
+
+* `ducpy.builders`: Fluent builder classes (`ElementBuilder`, style generators).
+* `ducpy.builders.sql_builder`: `DucSQL` class for raw SQLite connections and migrations.
+* `ducpy.classes`: Dataclass definitions matching the relational database schema.
+* `ducpy.enums`: Python enum constants matching `.duc` integer schema codes (`LINE_HEAD`, `TEXT_ALIGN`, `STROKE_PLACEMENT`, etc.).
+* `ducpy.parse`: Path-based drawing-state parsing plus streamed external-file, checkpoint, and delta payload access.
+* `ducpy.serialize`: Serialization utilities that write `.duc` files and return their output paths.

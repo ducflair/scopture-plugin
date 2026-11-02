@@ -1,0 +1,25 @@
+{
+  "name": "scopture",
+  "displayName": "Scopture",
+  "version": "1.2.0",
+  "description": "Work directly with physical engineering projects in Scopture. Inspect models, drawings, canvas state, and .duc files while keeping the surrounding project context in view. Analyze project data, run Python, create simulations, develop CAD and BIM models, capture screenshots, manage issues and project charters, trace requirements and decisions, and apply changes directly to the work.",
+  "author": {
+    "name": "Ducflair",
+    "url": "https://ducflair.com/"
+  },
+  "homepage": "https://site.scopture.com/",
+  "repository": "https://github.com/ducflair/scopture-plugin",
+  "license": "MIT",
+  "keywords": [
+    "design",
+    "drawings",
+    "projects",
+    "physical engineering",
+    "mechanical engineering",
+    "aerospace engineering",
+    "electrical engineering",
+    "civil engineering",
+    "architecture",
+    "mcp"
+  ]
+}

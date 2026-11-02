@@ -32,6 +32,12 @@ jobs:
       - name: Validate skill discovery CLI
         run: npx --yes skills add . --list
 
+      - name: Verify tracked docs match remote documentation
+        run: python3 scripts/check_docs.py
+
+      - name: Validate plugins (OpenAI and Claude)
+        run: python3 scripts/validate_plugins.py
+
   release:
     needs: validate
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'

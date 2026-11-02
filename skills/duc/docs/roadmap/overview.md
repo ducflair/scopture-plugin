@@ -1,0 +1,37 @@
+# Roadmap Overview (/docs/roadmap/overview)
+
+
+
+
+
+Our roadmap outlines the development milestones for the `duc` file format and its ecosystem tools.
+
+***
+
+## Core Objectives [#core-objectives]
+
+* **Open-Source Project-State Platform**: Provide a high-precision, open-source project-state format and ecosystem for developers, designers, and engineers.
+* **SQLite Database Architecture**: Standardize `.duc` as a queryable, binary SQLite container with native FTS5 search, embedded version control, and project charter support.
+* **Multi-Language SDK Ecosystem**: Maintain tier-1 SDK support for TypeScript/JavaScript (`ducjs`), Python (`ducpy`), and Rust (`ducrs`).
+* **Interoperability**: Expand high-fidelity converters for SVG (`ducsvg`), PDF (`ducpdf`), and DXF (`ducdxf`).
+* **Hardware-Accelerated Rendering**: Deliver 60+ FPS WebGL/WebGPU rendering via `duc-renderer`.
+
+***
+
+## Development Stages [#development-stages]
+
+<Link href="y0">
+  🏗️ Year 0 | Foundations & Architecture Design ↗
+</Link>
+
+<br />
+
+<Link href="y1">
+  🗒️ Year 1 | SQLite Schema, SDKs & Format Converters ↗
+</Link>
+
+<br />
+
+<Link href="y2">
+  🗒️ Year 2 | Production Beta & Ecosystem Open Source Release ↗
+</Link>

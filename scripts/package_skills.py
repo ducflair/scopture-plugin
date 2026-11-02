@@ -1,19 +1,31 @@
 #!/usr/bin/env python3
 """
-Packages individual skill folders into standalone archives for release.
+Packages individual skill folders and plugin bundles into standalone archives for release.
 
-For each skill folder:
-1. Appends or updates the version inside the metadata block in SKILL.md:
-   - metadata:
-       version: "<version>"
-2. Packages the whole folder into:
+For each skill folder in skills/:
+1. Injects release version into YAML frontmatter metadata (SKILL.md)
+2. Packages into:
    - <skill_name>-<version>.tar.gz
    - <skill_name>-<version>.zip
-3. Generates SHA-256 checksums in checksums.txt
+
+For OpenAI Plugin (./scopture-openai-plugin):
+1. Injects release version into plugin.json
+2. Bundles the skills from skills/ (with docs and updated versions) into skills/
+3. Packages root contents directly into:
+   - scopture-openai-plugin.zip (per OpenAI specs: https://developers.openai.com/plugins/build/plugins)
+
+For Claude Plugin (./scopture-claude-plugin):
+1. Injects release version into .claude-plugin/plugin.json
+2. Bundles the skills from skills/ into skills/
+3. Packages into:
+   - scopture-claude-plugin.zip (per Claude pre-submission checklist: https://claude.com/docs/plugins/pre-submission-checklist)
+
+Generates SHA-256 checksums in checksums.txt.
 """
 
 import argparse
 import hashlib
+import json
 import os
 import re
 import shutil
@@ -31,6 +43,8 @@ from fetch_docs import (
     fetch_ducpy_reference,
     fetch_sql_reference,
 )
+
+IGNORED_FILE_NAMES = {".DS_Store", "Thumbs.db", "desktop.ini", "__MACOSX"}
 
 
 def update_frontmatter_version(content: str, version: str) -> str:
@@ -63,6 +77,13 @@ def update_frontmatter_version(content: str, version: str) -> str:
     return f"---\n{fm.strip()}\n---\n{body.lstrip()}"
 
 
+def update_json_version(file_path: Path, version: str) -> None:
+    """Update version field in a JSON file preserving formatting."""
+    data = json.loads(file_path.read_text(encoding="utf-8"))
+    data["version"] = version
+    file_path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+
+
 def sha256_file(path: Path) -> str:
     """Compute the SHA-256 hex digest of a file."""
     h = hashlib.sha256()
@@ -73,23 +94,37 @@ def sha256_file(path: Path) -> str:
 
 
 def package_directory_tar(src_dir: Path, target_tar: Path, arcname: str) -> None:
-    """Create a gzip tarball containing the whole folder."""
+    """Create a gzip tarball containing the directory nested under arcname."""
     with tarfile.open(target_tar, "w:gz") as tar:
         tar.add(src_dir, arcname=arcname)
 
 
 def package_directory_zip(src_dir: Path, target_zip: Path, arcname: str) -> None:
-    """Create a zip archive containing the whole folder."""
+    """Create a zip archive containing the directory nested under arcname."""
     with zipfile.ZipFile(target_zip, "w", compression=zipfile.ZIP_DEFLATED) as zf:
         for root, _, files in os.walk(src_dir):
             for file in files:
+                if file in IGNORED_FILE_NAMES:
+                    continue
                 full_path = Path(root) / file
                 rel_path = full_path.relative_to(src_dir)
-                zf.write(full_path, arcname=f"{arcname}/{rel_path}")
+                zf.write(full_path, arcname=f"{arcname}/{rel_path.as_posix()}")
+
+
+def package_root_contents_zip(src_dir: Path, target_zip: Path) -> None:
+    """Create a zip archive containing the files directly at the root of the archive."""
+    with zipfile.ZipFile(target_zip, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        for root, _, files in os.walk(src_dir):
+            for file in files:
+                if file in IGNORED_FILE_NAMES:
+                    continue
+                full_path = Path(root) / file
+                rel_path = full_path.relative_to(src_dir)
+                zf.write(full_path, arcname=rel_path.as_posix())
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Package skill folders for release.")
+    parser = argparse.ArgumentParser(description="Package skill folders and plugin bundles for release.")
     parser.add_argument(
         "--version",
         required=True,
@@ -101,6 +136,16 @@ def main() -> int:
         help="Directory containing skill subfolders (default: skills)",
     )
     parser.add_argument(
+        "--openai-plugin-dir",
+        default="scopture-openai-plugin",
+        help="Directory containing OpenAI plugin (default: scopture-openai-plugin)",
+    )
+    parser.add_argument(
+        "--claude-plugin-dir",
+        default="scopture-claude-plugin",
+        help="Directory containing Claude plugin (default: scopture-claude-plugin)",
+    )
+    parser.add_argument(
         "--out-dir",
         default="dist",
         help="Directory to write release archives into (default: dist)",
@@ -108,13 +153,22 @@ def main() -> int:
     parser.add_argument(
         "--in-place",
         action="store_true",
-        help="Also write version metadata back to source SKILL.md files in the repository",
+        help="Also write version metadata back to source SKILL.md and manifest files in the repository",
+    )
+    parser.add_argument(
+        "--fetch-remote-docs",
+        action="store_true",
+        help="Force re-fetching remote documentation instead of using tracked git tree docs",
     )
 
     args = parser.parse_args()
     version = args.version.lstrip("v")
-    skills_root = Path(args.skills_dir).resolve()
-    out_dir = Path(args.out_dir).resolve()
+    repo_root = Path(__file__).resolve().parent.parent
+    skills_root = (repo_root / args.skills_dir).resolve()
+    openai_root = (repo_root / args.openai_plugin_dir).resolve()
+    claude_root = (repo_root / args.claude_plugin_dir).resolve()
+    out_dir = (repo_root / args.out_dir).resolve()
+    license_file = repo_root / "LICENSE"
 
     if not skills_root.is_dir():
         print(f"Error: skills directory not found: {skills_root}", file=sys.stderr)
@@ -128,11 +182,14 @@ def main() -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     created_files = []
 
-    print(f"Packaging {len(skill_folders)} skill(s) for release version {version}...")
+    print(f"Packaging {len(skill_folders)} skill(s) and plugins for release version {version}...")
 
     with tempfile.TemporaryDirectory() as staging_tmp:
         staging_root = Path(staging_tmp)
+        skills_staging = staging_root / "skills"
+        skills_staging.mkdir()
 
+        # 1. Process and package each individual skill
         for folder in sorted(skill_folders, key=lambda p: p.name):
             skill_name = folder.name
             skill_md = folder / "SKILL.md"
@@ -140,8 +197,8 @@ def main() -> int:
                 print(f"Warning: Skipping {skill_name}, no SKILL.md found", file=sys.stderr)
                 continue
 
-            # Stage the whole folder
-            staged_folder = staging_root / skill_name
+            # Stage the whole skill folder (including docs tracked in git tree)
+            staged_folder = skills_staging / skill_name
             shutil.copytree(folder, staged_folder)
 
             # Update SKILL.md with version metadata
@@ -152,8 +209,9 @@ def main() -> int:
             if args.in_place:
                 skill_md.write_text(updated_content, encoding="utf-8")
 
-            # Automatically fetch and bundle live documentation if skill has a doc source
-            if skill_name in SKILL_DOC_SOURCES:
+            # If force fetch requested or docs folder missing, fetch live
+            docs_missing = (skill_name in SKILL_DOC_SOURCES) and not (staged_folder / "docs").is_dir()
+            if args.fetch_remote_docs or docs_missing:
                 doc_url = SKILL_DOC_SOURCES[skill_name]
                 try:
                     fetch_and_populate_skill_docs(
@@ -161,43 +219,25 @@ def main() -> int:
                         base_url=doc_url,
                         docs_dir=staged_folder / "docs",
                     )
-                    if args.in_place:
-                        fetch_and_populate_skill_docs(
-                            skill_name=skill_name,
-                            base_url=doc_url,
-                            docs_dir=folder / "docs",
-                        )
                 except Exception as e:
                     print(
-                        f"\n[CRITICAL ERROR] Failed to fetch documentation for skill '{skill_name}' from {doc_url}: {e}",
-                        file=sys.stderr,
-                    )
-                    print(
-                        "Aborting release build. The documentation site is unavailable or returned an error.",
+                        f"\n[CRITICAL ERROR] Failed to fetch documentation for skill '{skill_name}': {e}",
                         file=sys.stderr,
                     )
                     return 1
 
-            # Fetch ducpy Python reference and SQL schema reference for 'duc' skill
-            if skill_name == "duc":
+            if skill_name == "duc" and (args.fetch_remote_docs or not (staged_folder / "docs-ducpy").is_dir()):
                 try:
                     fetch_ducpy_reference(staged_folder / "docs-ducpy")
                     fetch_sql_reference(staged_folder / "docs-sql")
-                    if args.in_place:
-                        fetch_ducpy_reference(folder / "docs-ducpy")
-                        fetch_sql_reference(folder / "docs-sql")
                 except Exception as e:
                     print(
                         f"\n[CRITICAL ERROR] Failed to fetch ducpy/sql reference for skill 'duc': {e}",
                         file=sys.stderr,
                     )
-                    print(
-                        "Aborting release build. The reference site is unavailable or returned an error.",
-                        file=sys.stderr,
-                    )
                     return 1
 
-            # Archives to generate
+            # Archives for standalone skill
             tar_versioned = out_dir / f"{skill_name}-{version}.tar.gz"
             zip_versioned = out_dir / f"{skill_name}-{version}.zip"
 
@@ -205,9 +245,63 @@ def main() -> int:
             package_directory_zip(staged_folder, zip_versioned, arcname=skill_name)
 
             created_files.extend([tar_versioned, zip_versioned])
-            print(f"  ✓ {skill_name}: generated {tar_versioned.name}, {zip_versioned.name}")
+            print(f"  ✓ skill package: {tar_versioned.name}, {zip_versioned.name}")
 
-    # Write checksums
+        # 2. Package OpenAI Plugin (scopture-openai-plugin.zip)
+        if openai_root.is_dir():
+            openai_staging = staging_root / "openai-plugin"
+            shutil.copytree(openai_root, openai_staging)
+
+            # Update plugin.json version
+            openai_manifest = openai_staging / "plugin.json"
+            if openai_manifest.is_file():
+                update_json_version(openai_manifest, version)
+                if args.in_place and (openai_root / "plugin.json").is_file():
+                    update_json_version(openai_root / "plugin.json", version)
+
+            # Copy staged skills into plugin's skills/ directory
+            plugin_skills_dir = openai_staging / "skills"
+            if plugin_skills_dir.exists():
+                shutil.rmtree(plugin_skills_dir)
+            shutil.copytree(skills_staging, plugin_skills_dir)
+
+            # Ensure LICENSE is present
+            if license_file.is_file() and not (openai_staging / "LICENSE").is_file():
+                shutil.copy2(license_file, openai_staging / "LICENSE")
+
+            openai_zip = out_dir / "scopture-openai-plugin.zip"
+            package_root_contents_zip(openai_staging, openai_zip)
+            created_files.append(openai_zip)
+            print(f"  ✓ openai plugin: {openai_zip.name}")
+
+        # 3. Package Claude Plugin (scopture-claude-plugin.zip)
+        if claude_root.is_dir():
+            claude_staging = staging_root / "claude-plugin"
+            shutil.copytree(claude_root, claude_staging)
+
+            # Update .claude-plugin/plugin.json version
+            claude_manifest = claude_staging / ".claude-plugin" / "plugin.json"
+            if claude_manifest.is_file():
+                update_json_version(claude_manifest, version)
+                if args.in_place and (claude_root / ".claude-plugin" / "plugin.json").is_file():
+                    update_json_version(claude_root / ".claude-plugin" / "plugin.json", version)
+
+            # Copy staged skills into plugin's skills/ directory
+            claude_skills_dir = claude_staging / "skills"
+            if claude_skills_dir.exists():
+                shutil.rmtree(claude_skills_dir)
+            shutil.copytree(skills_staging, claude_skills_dir)
+
+            # Ensure LICENSE is present
+            if license_file.is_file() and not (claude_staging / "LICENSE").is_file():
+                shutil.copy2(license_file, claude_staging / "LICENSE")
+
+            claude_zip = out_dir / "scopture-claude-plugin.zip"
+            package_root_contents_zip(claude_staging, claude_zip)
+            created_files.append(claude_zip)
+            print(f"  ✓ claude plugin: {claude_zip.name}")
+
+    # Write checksums for all created archives
     checksums_file = out_dir / "checksums.txt"
     checksum_lines = []
     for f in created_files:

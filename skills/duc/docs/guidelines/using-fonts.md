@@ -1,0 +1,175 @@
+# Using Fonts (/docs/guidelines/using-fonts)
+
+
+
+
+
+## Font Names and Font Files [#font-names-and-font-files]
+
+DUC elements preserve a font choice, but they do not all consume fonts in the same way:
+
+| Element      | Stored or generated font reference                               | How the font is resolved                                                                                                                          |
+| :----------- | :--------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Text         | A CSS font-family name in `fontFamily` (`font_family` in Python) | The application rendering the canvas loads that family                                                                                            |
+| Document     | A Typst family name in the document’s `text` source              | The Typst compiler loads the requested faces and embeds them in the compiled PDF output                                                           |
+| Python model | A family declared in the Python source                           | The execution host supplies font files, and may expose `resolve_font(...)`; the model library consumes the family, file name, or path it requires |
+
+Use the exact family name, including spaces, such as `"Source Sans 3"`. Font availability belongs to the application or compilation environment, not the `.duc` schema itself. A reader that cannot resolve the requested family may substitute a fallback and produce different text metrics.
+
+<Callout type="info" title="Font availability depends on the host">
+  A host may load fonts from Google Fonts, a local font directory, or attached files. Use exact family names and verify availability in each target runtime. The format does not require a particular font service.
+</Callout>
+
+***
+
+## Text Elements [#text-elements]
+
+A Text Element stores its primary family in `fontFamily`. Adapters expose the same field using their language’s naming convention; for example, `ducpy` accepts `font_family` through `create_text_style(...)`:
+
+```python
+from ducpy.builders.style_builders import create_text_style
+
+text_style = create_text_style(
+    font_family="Inter",
+    font_size=24,
+)
+```
+
+Assign that style to the Text Element with the adapter’s text-element builder or mutation API. `bigFontFamily` (`big_font_family`) is the fallback family used for characters that the primary family cannot cover. `ducpy.create_text_style(...)` currently initializes it to the same family as `font_family`; set a broader fallback explicitly when the adapter exposes that field and the content needs additional scripts, symbols, or emoji.
+
+The DUC Text Element stores family names, not font bytes. For portable output, choose a family that every intended renderer can load and verify the resulting bounds after the font has loaded, because a fallback can change wrapping and alignment.
+
+***
+
+## Document Elements [#document-elements]
+
+A Document Element stores Typst source in `text`. Select the family with Typst’s `font` property:
+
+```typ
+#set text(font: "Inter")
+
+#text(size: 24pt, weight: "bold")[Inter]
+```
+
+Use a tuple when the document needs an ordered fallback chain:
+
+```typ
+#set text(font: ("Inter", "Noto Sans"))
+```
+
+The compilation host must provide the requested normal, italic, and weight variants. Default families and source scanning are host policies. Literal family declarations make it easier for hosts to discover dependencies before compilation.
+
+When authoring or testing the same source with the local Typst CLI, inspect the fonts available in that environment first:
+
+```bash
+typst fonts
+```
+
+To test a local font directory, pass it to the local compiler:
+
+```bash
+typst compile --font-path ./fonts test.typ test.pdf
+```
+
+`--font-path` configures that local CLI invocation; it is not Typst markup and is not stored in a Document Element. A locally installed font is therefore not automatically available to another DUC host.
+
+***
+
+## Python Model Elements [#python-model-elements]
+
+A Python execution host can scan literal font families, mount matching TTF files, and provide font helpers. The following examples assume these optional host globals:
+
+* `resolve_font("Inter")` returns the sandbox-local path of a mounted TTF.
+* `FontEnum(["Inter", "Noto Sans"])` declares a finite family manifest and supports iteration, key access, and identifier-safe attribute access such as `FONTS.Noto_Sans`.
+
+Declare selectable families at module scope so the host can discover them without running the program:
+
+```python
+FONTS = FontEnum(["Inter", "Noto Sans"])
+FONT_FAMILY = FONTS.Inter
+```
+
+A computed family name that is not also present in a literal `font=...` argument, a top-level font variable, or a `FontEnum` manifest may not be mounted. For a custom font, attach a TrueType `.ttf` External File to the Model Element through `fileIds`; `resolve_font(...)` can then address it by its mounted family or filename alias.
+
+### Build123d [#build123d]
+
+Pass the resolved font path explicitly to Build123d’s `Text` object:
+
+```python
+from build123d import Text
+
+FONT_FAMILY = "Inter"
+label = Text("Name 2026", font_size=10, font=FONT_FAMILY, font_path=resolve_font(FONT_FAMILY))
+
+emit_output(label, kind="parametric")
+```
+
+Emit the completed geometry with `emit_output(label, kind="parametric")`. Font selection controls the text geometry; the declared kind selects the [model output renderer](/docs/concepts/elements/model-element#output-kinds).
+
+### ezdxf [#ezdxf]
+
+DXF text refers to a named text style. Resolve the font, store its filename on the style, and use that style on each text entity:
+
+```python
+from pathlib import Path
+import ezdxf
+
+FONT_FAMILY = "Inter"
+font_name = Path(resolve_font(FONT_FAMILY)).name
+
+drawing = ezdxf.new()
+drawing.styles.new("DUC_TEXT", dxfattribs={"font": font_name})
+drawing.modelspace().add_text(
+    "Name 2026",
+    dxfattribs={"style": "DUC_TEXT", "height": 10},
+)
+```
+
+Emit the completed drawing with `emit_output(drawing, kind="dxf")`. Leaving the font only in a Python variable does not style a DXF entity. The entity must reference a DXF text style whose `font` attribute matches the mounted font filename or a viewer-recognized alias.
+
+### IfcOpenShell [#ifcopenshell]
+
+IFC stores the family name in an `IfcTextStyleFontModel`, not a sandbox path. Call `resolve_font(...)` first to ensure that the requested family is available to the preview runtime, then attach the font model through an `IfcTextStyle` and `IfcStyledItem`:
+
+```python
+FONT_FAMILY = "Inter"
+resolve_font(FONT_FAMILY)
+
+font_model = model.create_entity(
+    "IfcTextStyleFontModel",
+    Name=FONT_FAMILY,
+    FontFamily=(FONT_FAMILY,),
+    FontStyle="normal",
+    FontVariant="normal",
+    FontWeight="normal",
+    FontSize=model.create_entity("IfcLengthMeasure", 10.0),
+)
+text_style = model.create_entity(
+    "IfcTextStyle",
+    Name="Annotation text",
+    TextCharacterAppearance=None,
+    TextStyle=None,
+    TextFontStyle=font_model,
+    ModelOrDraughting=True,
+)
+model.create_entity(
+    "IfcStyledItem",
+    Item=text_literal,
+    Styles=(text_style,),
+    Name=None,
+)
+```
+
+Here, `text_literal` must be an `IfcTextLiteral` included in an annotation representation. Creating an `IfcTextStyleFontModel` without connecting it to the literal does not affect the rendered annotation. The completed IFC file must also follow the [IfcOpenShell output contract](/docs/concepts/elements/model-element#ifcopenshell-output-contract).
+
+***
+
+## Verification [#verification]
+
+After choosing a font:
+
+* Confirm the exact family resolves instead of silently falling back.
+* Exercise the weights, italics, scripts, symbols, and glyphs the content actually uses.
+* Recheck text bounds, wrapping, and alignment after the real face has loaded.
+* For Typst, compile the Document Element and inspect the generated PDF.
+* For Build123d, verify that text became geometry; for DXF, inspect the entity’s text style; for IFC, verify that the styled text literal appears in the model preview.

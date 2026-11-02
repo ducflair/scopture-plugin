@@ -1,0 +1,229 @@
+# Docs
+
+- [Scopture Docs](/docs): Understand what Scopture is and where to begin.
+- Get Started
+  - [What Is Scopture?](/docs/get-started/what-is-scopture): Understand the project context Scopture preserves and its role in physical-engineering work.
+  - [Run a Design Review](/docs/get-started/design-review): A practical workflow for assembling evidence, capturing feedback, and carrying decisions into the next revision.
+  - [Tutorials](/docs/get-started/tutorials): Guided introductions to the Scopture workspace, drawing tools, and review workflows.
+
+- ** Definition **
+- Concepts
+  - [Canvas and Artifacts](/docs/concepts/canvas-and-artifacts): How Scopture brings project evidence into one spatial review surface.
+  - [Model Parameters](/docs/concepts/model-parameters): Use editable Python parameters and modular Model Elements to build dynamic, reusable Scopture workflows.
+  - [Charter, Issues, and Decisions](/docs/concepts/charter-issues-and-decisions): How Scopture turns project intent and review activity into an accessible decision trail.
+  - [Versions and Revisions](/docs/concepts/versions-and-revisions): How to inspect, preserve, and recover meaningful project states in Scopture.
+  - [Drawings, Sharing, and Export](/docs/concepts/drawings-sharing-and-export): How Scopture stores, shares, collaborates on, and exports drawings.
+
+- ** Automation **
+- [AI Providers](/docs/automation/ai-providers): Connect ChatGPT, Claude, Gemini, Copilot, Grok, and Perplexity to your Scopture drawings.
+- [MCP Tool](/docs/automation/mcp-tool): How external agents inspect, reason over, and update Scopture project state under the same access and version controls as the application.
+- [Command-Line Interface](/docs/automation/cli-tool): Use the CLI included with Scopture desktop to open, inspect, and automate local or remote drawings.
+- [SQLite Runner](/docs/automation/sqlite-runner): Query drawing databases, join drawings, and apply scoped SQL changes through MCP or the CLI.
+- [Python Sandbox](/docs/automation/python-sandbox): Run reusable models, engineering calculations and drawing automation with Scopture's shared Python runtime.
+
+# Docs
+
+- [Scopture Docs](/pt/docs): Understand what Scopture is and where to begin.
+- Get Started
+  - [What Is Scopture?](/pt/docs/get-started/what-is-scopture): Understand the project context Scopture preserves and its role in physical-engineering work.
+  - [Run a Design Review](/pt/docs/get-started/design-review): A practical workflow for assembling evidence, capturing feedback, and carrying decisions into the next revision.
+  - [Tutorials](/pt/docs/get-started/tutorials): Guided introductions to the Scopture workspace, drawing tools, and review workflows.
+
+- ** Definition **
+- Concepts
+  - [Canvas and Artifacts](/pt/docs/concepts/canvas-and-artifacts): How Scopture brings project evidence into one spatial review surface.
+  - [Model Parameters](/pt/docs/concepts/model-parameters): Use editable Python parameters and modular Model Elements to build dynamic, reusable Scopture workflows.
+  - [Charter, Issues, and Decisions](/pt/docs/concepts/charter-issues-and-decisions): How Scopture turns project intent and review activity into an accessible decision trail.
+  - [Versions and Revisions](/pt/docs/concepts/versions-and-revisions): How to inspect, preserve, and recover meaningful project states in Scopture.
+  - [Drawings, Sharing, and Export](/pt/docs/concepts/drawings-sharing-and-export): How Scopture stores, shares, collaborates on, and exports drawings.
+
+- ** Automation **
+- [AI Providers](/pt/docs/automation/ai-providers): Connect ChatGPT, Claude, Gemini, Copilot, Grok, and Perplexity to your Scopture drawings.
+- [MCP Tool](/pt/docs/automation/mcp-tool): How external agents inspect, reason over, and update Scopture project state under the same access and version controls as the application.
+- [Command-Line Interface](/pt/docs/automation/cli-tool): Use the CLI included with Scopture desktop to open, inspect, and automate local or remote drawings.
+- [SQLite Runner](/pt/docs/automation/sqlite-runner): Query drawing databases, join drawings, and apply scoped SQL changes through MCP or the CLI.
+- [Python Sandbox](/pt/docs/automation/python-sandbox): Run reusable models, engineering calculations and drawing automation with Scopture's shared Python runtime.
+
+# Docs
+
+- [Scopture Docs](/es/docs): Understand what Scopture is and where to begin.
+- Get Started
+  - [What Is Scopture?](/es/docs/get-started/what-is-scopture): Understand the project context Scopture preserves and its role in physical-engineering work.
+  - [Run a Design Review](/es/docs/get-started/design-review): A practical workflow for assembling evidence, capturing feedback, and carrying decisions into the next revision.
+  - [Tutorials](/es/docs/get-started/tutorials): Guided introductions to the Scopture workspace, drawing tools, and review workflows.
+
+- ** Definition **
+- Concepts
+  - [Canvas and Artifacts](/es/docs/concepts/canvas-and-artifacts): How Scopture brings project evidence into one spatial review surface.
+  - [Model Parameters](/es/docs/concepts/model-parameters): Use editable Python parameters and modular Model Elements to build dynamic, reusable Scopture workflows.
+  - [Charter, Issues, and Decisions](/es/docs/concepts/charter-issues-and-decisions): How Scopture turns project intent and review activity into an accessible decision trail.
+  - [Versions and Revisions](/es/docs/concepts/versions-and-revisions): How to inspect, preserve, and recover meaningful project states in Scopture.
+  - [Drawings, Sharing, and Export](/es/docs/concepts/drawings-sharing-and-export): How Scopture stores, shares, collaborates on, and exports drawings.
+
+- ** Automation **
+- [AI Providers](/es/docs/automation/ai-providers): Connect ChatGPT, Claude, Gemini, Copilot, Grok, and Perplexity to your Scopture drawings.
+- [MCP Tool](/es/docs/automation/mcp-tool): How external agents inspect, reason over, and update Scopture project state under the same access and version controls as the application.
+- [Command-Line Interface](/es/docs/automation/cli-tool): Use the CLI included with Scopture desktop to open, inspect, and automate local or remote drawings.
+- [SQLite Runner](/es/docs/automation/sqlite-runner): Query drawing databases, join drawings, and apply scoped SQL changes through MCP or the CLI.
+- [Python Sandbox](/es/docs/automation/python-sandbox): Run reusable models, engineering calculations and drawing automation with Scopture's shared Python runtime.
+
+# Docs
+
+- [Scopture Docs](/fr/docs): Understand what Scopture is and where to begin.
+- Get Started
+  - [What Is Scopture?](/fr/docs/get-started/what-is-scopture): Understand the project context Scopture preserves and its role in physical-engineering work.
+  - [Run a Design Review](/fr/docs/get-started/design-review): A practical workflow for assembling evidence, capturing feedback, and carrying decisions into the next revision.
+  - [Tutorials](/fr/docs/get-started/tutorials): Guided introductions to the Scopture workspace, drawing tools, and review workflows.
+
+- ** Definition **
+- Concepts
+  - [Canvas and Artifacts](/fr/docs/concepts/canvas-and-artifacts): How Scopture brings project evidence into one spatial review surface.
+  - [Model Parameters](/fr/docs/concepts/model-parameters): Use editable Python parameters and modular Model Elements to build dynamic, reusable Scopture workflows.
+  - [Charter, Issues, and Decisions](/fr/docs/concepts/charter-issues-and-decisions): How Scopture turns project intent and review activity into an accessible decision trail.
+  - [Versions and Revisions](/fr/docs/concepts/versions-and-revisions): How to inspect, preserve, and recover meaningful project states in Scopture.
+  - [Drawings, Sharing, and Export](/fr/docs/concepts/drawings-sharing-and-export): How Scopture stores, shares, collaborates on, and exports drawings.
+
+- ** Automation **
+- [AI Providers](/fr/docs/automation/ai-providers): Connect ChatGPT, Claude, Gemini, Copilot, Grok, and Perplexity to your Scopture drawings.
+- [MCP Tool](/fr/docs/automation/mcp-tool): How external agents inspect, reason over, and update Scopture project state under the same access and version controls as the application.
+- [Command-Line Interface](/fr/docs/automation/cli-tool): Use the CLI included with Scopture desktop to open, inspect, and automate local or remote drawings.
+- [SQLite Runner](/fr/docs/automation/sqlite-runner): Query drawing databases, join drawings, and apply scoped SQL changes through MCP or the CLI.
+- [Python Sandbox](/fr/docs/automation/python-sandbox): Run reusable models, engineering calculations and drawing automation with Scopture's shared Python runtime.
+
+# Docs
+
+- [Scopture Docs](/de/docs): Understand what Scopture is and where to begin.
+- Get Started
+  - [What Is Scopture?](/de/docs/get-started/what-is-scopture): Understand the project context Scopture preserves and its role in physical-engineering work.
+  - [Run a Design Review](/de/docs/get-started/design-review): A practical workflow for assembling evidence, capturing feedback, and carrying decisions into the next revision.
+  - [Tutorials](/de/docs/get-started/tutorials): Guided introductions to the Scopture workspace, drawing tools, and review workflows.
+
+- ** Definition **
+- Concepts
+  - [Canvas and Artifacts](/de/docs/concepts/canvas-and-artifacts): How Scopture brings project evidence into one spatial review surface.
+  - [Model Parameters](/de/docs/concepts/model-parameters): Use editable Python parameters and modular Model Elements to build dynamic, reusable Scopture workflows.
+  - [Charter, Issues, and Decisions](/de/docs/concepts/charter-issues-and-decisions): How Scopture turns project intent and review activity into an accessible decision trail.
+  - [Versions and Revisions](/de/docs/concepts/versions-and-revisions): How to inspect, preserve, and recover meaningful project states in Scopture.
+  - [Drawings, Sharing, and Export](/de/docs/concepts/drawings-sharing-and-export): How Scopture stores, shares, collaborates on, and exports drawings.
+
+- ** Automation **
+- [AI Providers](/de/docs/automation/ai-providers): Connect ChatGPT, Claude, Gemini, Copilot, Grok, and Perplexity to your Scopture drawings.
+- [MCP Tool](/de/docs/automation/mcp-tool): How external agents inspect, reason over, and update Scopture project state under the same access and version controls as the application.
+- [Command-Line Interface](/de/docs/automation/cli-tool): Use the CLI included with Scopture desktop to open, inspect, and automate local or remote drawings.
+- [SQLite Runner](/de/docs/automation/sqlite-runner): Query drawing databases, join drawings, and apply scoped SQL changes through MCP or the CLI.
+- [Python Sandbox](/de/docs/automation/python-sandbox): Run reusable models, engineering calculations and drawing automation with Scopture's shared Python runtime.
+
+# Docs
+
+- [Scopture Docs](/ja/docs): Understand what Scopture is and where to begin.
+- Get Started
+  - [What Is Scopture?](/ja/docs/get-started/what-is-scopture): Understand the project context Scopture preserves and its role in physical-engineering work.
+  - [Run a Design Review](/ja/docs/get-started/design-review): A practical workflow for assembling evidence, capturing feedback, and carrying decisions into the next revision.
+  - [Tutorials](/ja/docs/get-started/tutorials): Guided introductions to the Scopture workspace, drawing tools, and review workflows.
+
+- ** Definition **
+- Concepts
+  - [Canvas and Artifacts](/ja/docs/concepts/canvas-and-artifacts): How Scopture brings project evidence into one spatial review surface.
+  - [Model Parameters](/ja/docs/concepts/model-parameters): Use editable Python parameters and modular Model Elements to build dynamic, reusable Scopture workflows.
+  - [Charter, Issues, and Decisions](/ja/docs/concepts/charter-issues-and-decisions): How Scopture turns project intent and review activity into an accessible decision trail.
+  - [Versions and Revisions](/ja/docs/concepts/versions-and-revisions): How to inspect, preserve, and recover meaningful project states in Scopture.
+  - [Drawings, Sharing, and Export](/ja/docs/concepts/drawings-sharing-and-export): How Scopture stores, shares, collaborates on, and exports drawings.
+
+- ** Automation **
+- [AI Providers](/ja/docs/automation/ai-providers): Connect ChatGPT, Claude, Gemini, Copilot, Grok, and Perplexity to your Scopture drawings.
+- [MCP Tool](/ja/docs/automation/mcp-tool): How external agents inspect, reason over, and update Scopture project state under the same access and version controls as the application.
+- [Command-Line Interface](/ja/docs/automation/cli-tool): Use the CLI included with Scopture desktop to open, inspect, and automate local or remote drawings.
+- [SQLite Runner](/ja/docs/automation/sqlite-runner): Query drawing databases, join drawings, and apply scoped SQL changes through MCP or the CLI.
+- [Python Sandbox](/ja/docs/automation/python-sandbox): Run reusable models, engineering calculations and drawing automation with Scopture's shared Python runtime.
+
+# Docs
+
+- [Scopture Docs](/zh/docs): Understand what Scopture is and where to begin.
+- Get Started
+  - [What Is Scopture?](/zh/docs/get-started/what-is-scopture): Understand the project context Scopture preserves and its role in physical-engineering work.
+  - [Run a Design Review](/zh/docs/get-started/design-review): A practical workflow for assembling evidence, capturing feedback, and carrying decisions into the next revision.
+  - [Tutorials](/zh/docs/get-started/tutorials): Guided introductions to the Scopture workspace, drawing tools, and review workflows.
+
+- ** Definition **
+- Concepts
+  - [Canvas and Artifacts](/zh/docs/concepts/canvas-and-artifacts): How Scopture brings project evidence into one spatial review surface.
+  - [Model Parameters](/zh/docs/concepts/model-parameters): Use editable Python parameters and modular Model Elements to build dynamic, reusable Scopture workflows.
+  - [Charter, Issues, and Decisions](/zh/docs/concepts/charter-issues-and-decisions): How Scopture turns project intent and review activity into an accessible decision trail.
+  - [Versions and Revisions](/zh/docs/concepts/versions-and-revisions): How to inspect, preserve, and recover meaningful project states in Scopture.
+  - [Drawings, Sharing, and Export](/zh/docs/concepts/drawings-sharing-and-export): How Scopture stores, shares, collaborates on, and exports drawings.
+
+- ** Automation **
+- [AI Providers](/zh/docs/automation/ai-providers): Connect ChatGPT, Claude, Gemini, Copilot, Grok, and Perplexity to your Scopture drawings.
+- [MCP Tool](/zh/docs/automation/mcp-tool): How external agents inspect, reason over, and update Scopture project state under the same access and version controls as the application.
+- [Command-Line Interface](/zh/docs/automation/cli-tool): Use the CLI included with Scopture desktop to open, inspect, and automate local or remote drawings.
+- [SQLite Runner](/zh/docs/automation/sqlite-runner): Query drawing databases, join drawings, and apply scoped SQL changes through MCP or the CLI.
+- [Python Sandbox](/zh/docs/automation/python-sandbox): Run reusable models, engineering calculations and drawing automation with Scopture's shared Python runtime.
+
+# Docs
+
+- [Scopture Docs](/ru/docs): Understand what Scopture is and where to begin.
+- Get Started
+  - [What Is Scopture?](/ru/docs/get-started/what-is-scopture): Understand the project context Scopture preserves and its role in physical-engineering work.
+  - [Run a Design Review](/ru/docs/get-started/design-review): A practical workflow for assembling evidence, capturing feedback, and carrying decisions into the next revision.
+  - [Tutorials](/ru/docs/get-started/tutorials): Guided introductions to the Scopture workspace, drawing tools, and review workflows.
+
+- ** Definition **
+- Concepts
+  - [Canvas and Artifacts](/ru/docs/concepts/canvas-and-artifacts): How Scopture brings project evidence into one spatial review surface.
+  - [Model Parameters](/ru/docs/concepts/model-parameters): Use editable Python parameters and modular Model Elements to build dynamic, reusable Scopture workflows.
+  - [Charter, Issues, and Decisions](/ru/docs/concepts/charter-issues-and-decisions): How Scopture turns project intent and review activity into an accessible decision trail.
+  - [Versions and Revisions](/ru/docs/concepts/versions-and-revisions): How to inspect, preserve, and recover meaningful project states in Scopture.
+  - [Drawings, Sharing, and Export](/ru/docs/concepts/drawings-sharing-and-export): How Scopture stores, shares, collaborates on, and exports drawings.
+
+- ** Automation **
+- [AI Providers](/ru/docs/automation/ai-providers): Connect ChatGPT, Claude, Gemini, Copilot, Grok, and Perplexity to your Scopture drawings.
+- [MCP Tool](/ru/docs/automation/mcp-tool): How external agents inspect, reason over, and update Scopture project state under the same access and version controls as the application.
+- [Command-Line Interface](/ru/docs/automation/cli-tool): Use the CLI included with Scopture desktop to open, inspect, and automate local or remote drawings.
+- [SQLite Runner](/ru/docs/automation/sqlite-runner): Query drawing databases, join drawings, and apply scoped SQL changes through MCP or the CLI.
+- [Python Sandbox](/ru/docs/automation/python-sandbox): Run reusable models, engineering calculations and drawing automation with Scopture's shared Python runtime.
+
+# Docs
+
+- [Scopture Docs](/ar/docs): Understand what Scopture is and where to begin.
+- Get Started
+  - [What Is Scopture?](/ar/docs/get-started/what-is-scopture): Understand the project context Scopture preserves and its role in physical-engineering work.
+  - [Run a Design Review](/ar/docs/get-started/design-review): A practical workflow for assembling evidence, capturing feedback, and carrying decisions into the next revision.
+  - [Tutorials](/ar/docs/get-started/tutorials): Guided introductions to the Scopture workspace, drawing tools, and review workflows.
+
+- ** Definition **
+- Concepts
+  - [Canvas and Artifacts](/ar/docs/concepts/canvas-and-artifacts): How Scopture brings project evidence into one spatial review surface.
+  - [Model Parameters](/ar/docs/concepts/model-parameters): Use editable Python parameters and modular Model Elements to build dynamic, reusable Scopture workflows.
+  - [Charter, Issues, and Decisions](/ar/docs/concepts/charter-issues-and-decisions): How Scopture turns project intent and review activity into an accessible decision trail.
+  - [Versions and Revisions](/ar/docs/concepts/versions-and-revisions): How to inspect, preserve, and recover meaningful project states in Scopture.
+  - [Drawings, Sharing, and Export](/ar/docs/concepts/drawings-sharing-and-export): How Scopture stores, shares, collaborates on, and exports drawings.
+
+- ** Automation **
+- [AI Providers](/ar/docs/automation/ai-providers): Connect ChatGPT, Claude, Gemini, Copilot, Grok, and Perplexity to your Scopture drawings.
+- [MCP Tool](/ar/docs/automation/mcp-tool): How external agents inspect, reason over, and update Scopture project state under the same access and version controls as the application.
+- [Command-Line Interface](/ar/docs/automation/cli-tool): Use the CLI included with Scopture desktop to open, inspect, and automate local or remote drawings.
+- [SQLite Runner](/ar/docs/automation/sqlite-runner): Query drawing databases, join drawings, and apply scoped SQL changes through MCP or the CLI.
+- [Python Sandbox](/ar/docs/automation/python-sandbox): Run reusable models, engineering calculations and drawing automation with Scopture's shared Python runtime.
+
+# Docs
+
+- [Scopture Docs](/hi/docs): Understand what Scopture is and where to begin.
+- Get Started
+  - [What Is Scopture?](/hi/docs/get-started/what-is-scopture): Understand the project context Scopture preserves and its role in physical-engineering work.
+  - [Run a Design Review](/hi/docs/get-started/design-review): A practical workflow for assembling evidence, capturing feedback, and carrying decisions into the next revision.
+  - [Tutorials](/hi/docs/get-started/tutorials): Guided introductions to the Scopture workspace, drawing tools, and review workflows.
+
+- ** Definition **
+- Concepts
+  - [Canvas and Artifacts](/hi/docs/concepts/canvas-and-artifacts): How Scopture brings project evidence into one spatial review surface.
+  - [Model Parameters](/hi/docs/concepts/model-parameters): Use editable Python parameters and modular Model Elements to build dynamic, reusable Scopture workflows.
+  - [Charter, Issues, and Decisions](/hi/docs/concepts/charter-issues-and-decisions): How Scopture turns project intent and review activity into an accessible decision trail.
+  - [Versions and Revisions](/hi/docs/concepts/versions-and-revisions): How to inspect, preserve, and recover meaningful project states in Scopture.
+  - [Drawings, Sharing, and Export](/hi/docs/concepts/drawings-sharing-and-export): How Scopture stores, shares, collaborates on, and exports drawings.
+
+- ** Automation **
+- [AI Providers](/hi/docs/automation/ai-providers): Connect ChatGPT, Claude, Gemini, Copilot, Grok, and Perplexity to your Scopture drawings.
+- [MCP Tool](/hi/docs/automation/mcp-tool): How external agents inspect, reason over, and update Scopture project state under the same access and version controls as the application.
+- [Command-Line Interface](/hi/docs/automation/cli-tool): Use the CLI included with Scopture desktop to open, inspect, and automate local or remote drawings.
+- [SQLite Runner](/hi/docs/automation/sqlite-runner): Query drawing databases, join drawings, and apply scoped SQL changes through MCP or the CLI.
+- [Python Sandbox](/hi/docs/automation/python-sandbox): Run reusable models, engineering calculations and drawing automation with Scopture's shared Python runtime.

@@ -1,0 +1,88 @@
+# Model Element Modularization (/docs/concepts/model-modularization)
+
+
+
+## Models as a Dependency Graph [#models-as-a-dependency-graph]
+
+A Python [Model Element](/docs/concepts/elements/model-element) does not need to render geometry by itself. It can instead be a reusable module that exposes parameters, functions, standards, or domain logic to other Model Elements.
+
+This changes a large procedural model from one monolithic script into a dependency graph:
+
+<Mermaid
+  chart="flowchart LR
+    P[&#x22;Parameters<br/>dimensions and material rules&#x22;] --> G[&#x22;Geometry helper<br/>build_wall(...)&#x22;]
+    G --> A[&#x22;Assembly root<br/>emit_output(...)&#x22;]
+    P --> A"
+/>
+
+The leaf and intermediate elements may have no visual output. The root element imports them, composes the result, and calls `emit_output(...)` once with its output kind. The result can be parametric CAD, IFC, DXF, image, SVG, PDF, or table content.
+
+## The `duc_model` Package [#the-duc_model-package]
+
+Compatible hosts expose referenced Python Model Elements as lazy modules under the virtual `duc_model` package. An import is resolved from Model Elements in the same drawing rather than from a file on the host filesystem.
+
+The preferred form imports only the required public names:
+
+```python
+from duc_model.mmBUBjTesxYfxL0HDjXWg import width, height
+```
+
+Importing the module is also supported:
+
+```python
+import duc_model.mmBUBjTesxYfxL0HDjXWg as dimensions
+
+area = dimensions.width * dimensions.height
+```
+
+Dependencies are loaded when Python imports them and each referenced element executes once per root execution. A dependency may import another Model Element, allowing the host to resolve the complete transitive closure. Keep the graph acyclic and use ordinary explicit imports; dynamic imports cannot be reliably discovered before execution.
+
+## Separate Configuration, Logic, and Output [#separate-configuration-logic-and-output]
+
+A useful module boundary assigns one responsibility to each Model Element.
+
+### Parameters [#parameters]
+
+```python
+# Element ID: mmBUBjTesxYfxL0HDjXWg
+width = 120
+height = 80
+wall_thickness = 5
+show_fasteners = True
+```
+
+### Geometry helper [#geometry-helper]
+
+```python
+# Element ID: model_wall_geometry
+from duc_model.mmBUBjTesxYfxL0HDjXWg import width, height, wall_thickness
+from build123d import Box
+
+def build_wall():
+    return Box(width, wall_thickness, height)
+```
+
+### Rendering root [#rendering-root]
+
+```python
+from duc_model.model_wall_geometry import build_wall
+
+model = build_wall()
+emit_output(model, kind="parametric")
+```
+
+Only the rendering root should call `emit_output(...)` for the final artifact. Imported modules should expose data and callable building blocks. This keeps previews deterministic and allows the same parameter or geometry module to serve several assemblies.
+
+## Change Propagation [#change-propagation]
+
+The dependency relationship is encoded in Python source, while each module remains a normal Model Element with its own ID and `code`. A runtime that caches compiled geometry or thumbnails should include the complete transitive module graph in its content identity. Changing a shared parameter element must invalidate every dependent root, not only the edited element.
+
+This separation is especially useful for:
+
+* one set of project dimensions driving multiple assemblies;
+* shared material, tolerance, or fabrication rules;
+* reusable geometry factories with several rendering roots;
+* logic-only elements that make domain rules inspectable without adding canvas output; and
+* focused version review, where a small source change has an explicit downstream dependency path.
+
+Modularization does not change the stored `DucModelElement` shape: source remains in each element’s `code`, source and generated file references remain in `fileIds`, and presentation state remains in `viewerState`. Generated output is excluded from runtime inputs, and the root’s output envelope records its source and input fingerprints. The module graph is reconstructed from the explicit `duc_model` imports.

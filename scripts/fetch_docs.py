@@ -13,9 +13,9 @@ import argparse
 import concurrent.futures
 import re
 import sys
+import time
 import urllib.error
 import urllib.request
-import zipfile
 from pathlib import Path
 
 # Mapping of primary Fumadocs sites
@@ -28,8 +28,8 @@ DUCPY_BASE_URL = "https://ducflair.github.io/duc/reference/python/"
 SQL_REF_URL = "https://ducflair.github.io/duc/reference/sql/"
 
 
-def fetch_url(url: str, timeout: int = 25) -> str:
-    """Fetch text content from a URL with English headers and strict error checking."""
+def fetch_url(url: str, timeout: int = 25, max_retries: int = 3) -> str:
+    """Fetch text content from a URL with retry logic, English headers, and strict error checking."""
     req = urllib.request.Request(
         url,
         headers={
@@ -37,19 +37,39 @@ def fetch_url(url: str, timeout: int = 25) -> str:
             "Accept-Language": "en,en-US;q=0.9",
         },
     )
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            if resp.status != 200:
-                raise RuntimeError(f"HTTP {resp.status} fetching {url}")
-            return resp.read().decode("utf-8")
-    except urllib.error.HTTPError as e:
-        raise RuntimeError(f"HTTP {e.code} ({e.reason}) fetching {url}") from e
-    except urllib.error.URLError as e:
-        raise RuntimeError(f"Network error fetching {url}: {e.reason}") from e
-    except TimeoutError as e:
-        raise RuntimeError(f"Timeout ({timeout}s) fetching {url}") from e
-    except Exception as e:
-        raise RuntimeError(f"Unexpected error fetching {url}: {e}") from e
+    last_err = None
+    for attempt in range(1, max_retries + 1):
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                if resp.status != 200:
+                    raise RuntimeError(f"HTTP {resp.status} fetching {url}")
+                return resp.read().decode("utf-8")
+        except urllib.error.HTTPError as e:
+            last_err = RuntimeError(f"HTTP {e.code} ({e.reason}) fetching {url}")
+            if e.code in (500, 502, 503, 504, 429) and attempt < max_retries:
+                time.sleep(1.5 * attempt)
+                continue
+            raise last_err from e
+        except urllib.error.URLError as e:
+            last_err = RuntimeError(f"Network error fetching {url}: {e.reason}")
+            if attempt < max_retries:
+                time.sleep(1.5 * attempt)
+                continue
+            raise last_err from e
+        except TimeoutError as e:
+            last_err = RuntimeError(f"Timeout ({timeout}s) fetching {url}")
+            if attempt < max_retries:
+                time.sleep(1.5 * attempt)
+                continue
+            raise last_err from e
+        except Exception as e:
+            last_err = RuntimeError(f"Unexpected error fetching {url}: {e}")
+            if attempt < max_retries:
+                time.sleep(1.5 * attempt)
+                continue
+            raise last_err from e
+
+    raise last_err or RuntimeError(f"Failed to fetch {url}")
 
 
 def parse_fumadocs_sections(content: str) -> list[tuple[str, str, str]]:
@@ -72,6 +92,27 @@ def parse_fumadocs_sections(content: str) -> list[tuple[str, str, str]]:
         pages.append((title, rel_path, sec))
 
     return pages
+
+
+def _cleanup_stale_files(target_dir: Path, written_rel_paths: set[str], allowed_extensions: set[str]) -> None:
+    """Remove files in target_dir that were not in written_rel_paths."""
+    if not target_dir.is_dir():
+        return
+    for item in list(target_dir.rglob("*")):
+        if item.is_file() and item.suffix in allowed_extensions:
+            rel = item.relative_to(target_dir).as_posix()
+            if rel not in written_rel_paths:
+                try:
+                    item.unlink()
+                except OSError:
+                    pass
+    # Clean up empty subdirectories
+    for d in sorted(target_dir.rglob("*"), key=lambda p: len(p.parts), reverse=True):
+        if d.is_dir() and not any(d.iterdir()):
+            try:
+                d.rmdir()
+            except OSError:
+                pass
 
 
 def fetch_and_populate_skill_docs(skill_name: str, base_url: str, docs_dir: Path) -> int:
@@ -97,12 +138,16 @@ def fetch_and_populate_skill_docs(skill_name: str, base_url: str, docs_dir: Path
         )
 
     docs_dir.mkdir(parents=True, exist_ok=True)
+    written_files = {"llms.txt"}
     (docs_dir / "llms.txt").write_text(llms_txt, encoding="utf-8")
 
     for _, rel_path, markdown in pages:
         target_path = docs_dir / rel_path
         target_path.parent.mkdir(parents=True, exist_ok=True)
         target_path.write_text(markdown, encoding="utf-8")
+        written_files.add(rel_path)
+
+    _cleanup_stale_files(docs_dir, written_files, {".md", ".txt"})
 
     print(f"    ✓ Added docs/llms.txt and {len(pages)} markdown page(s) into {docs_dir}")
     return len(pages)
@@ -138,10 +183,14 @@ def fetch_ducpy_reference(dest_dir: Path) -> int:
     with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
         results = list(executor.map(fetch_single_page, page_links))
 
+    written_files = {"llms.txt"}
     for clean_rel, content in results:
         file_path = dest_dir / clean_rel
         file_path.parent.mkdir(parents=True, exist_ok=True)
         file_path.write_text(content, encoding="utf-8")
+        written_files.add(clean_rel)
+
+    _cleanup_stale_files(dest_dir, written_files, {".md", ".txt"})
 
     print(f"    ✓ Added docs-ducpy/llms.txt and {len(results)} module page(s)")
     return len(results)
@@ -223,6 +272,9 @@ def fetch_sql_reference(dest_dir: Path) -> int:
 
     (dest_dir / "schema.md").write_text("".join(md_parts), encoding="utf-8")
     (dest_dir / "llms.txt").write_text("\n".join(llms_lines), encoding="utf-8")
+
+    written_files = {"index.html", "schema.md", "llms.txt"}
+    _cleanup_stale_files(dest_dir, written_files, {".md", ".txt", ".html"})
 
     print(f"    ✓ Added docs-sql/llms.txt, schema.md, and index.html ({len(tables_found)} tables/views)")
     return len(tables_found)

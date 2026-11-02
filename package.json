@@ -3,8 +3,12 @@
   "version": "0.0.0-development",
   "private": true,
   "scripts": {
-    "validate": "python3 scripts/validate_skills.py",
+    "validate": "python3 scripts/validate_skills.py && python3 scripts/validate_plugins.py",
+    "validate:skills": "python3 scripts/validate_skills.py",
+    "validate:plugins": "python3 scripts/validate_plugins.py",
+    "check:docs": "python3 scripts/check_docs.py",
     "package": "python3 scripts/package_skills.py",
+    "remote-docs": "python3 scripts/fetch_docs.py --to-skills --target all",
     "release": "semantic-release"
   },
   "devDependencies": {

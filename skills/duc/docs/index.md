@@ -1,0 +1,26 @@
+# Duc File Format (/docs)
+
+
+
+
+
+[<img alt="Presentation" src="__img0" />](https://scopture.com/w/gR3TrgiTVTLuA98mgv)
+
+> Project on display developed in Scopture by the Ducflair team, representing physical-engineering work from the <a href="https://onlinelibrary.wiley.com/doi/10.1111/jmi.13219" target="_blank" rel="noopener noreferrer" className="underline hover:text-fd-foreground">openFrame</a> project.
+
+## Overview [#overview]
+
+The `.duc` file format is an open, **gzip-compressed SQLite database container** for physical-engineering project state before execution. Designed for physical engineering projects, high-precision design workflows, and cross-platform runtime environments, `.duc` provides a structured, queryable, and version-controlled container for project geometry, metadata, and decision records.
+
+By embedding relational storage, full-text search, DAG-based versioning, and project management directly inside a SQLite database file, `.duc` links engineering project state with real-time graphical applications, automation tools, and AI workflows.
+
+***
+
+## Core Capabilities [#core-capabilities]
+
+* **SQLite Container Architecture**: A `.duc` file is a gzip-compressed SQLite database. It eliminates custom binary parsing logic by leveraging SQLite’s WAL journal mode, atomic transactions, and relational querying across desktop, mobile, server, and WebAssembly runtime environments.
+* **Built-in DAG Version Control**: Supports versioning directly inside the file container, tracking full checkpoints, incremental deltas, schema migration boundaries, and SHA-256 data integrity checksums.
+* **Full-Text Search (FTS5)**: Automatic, real-time indexing of element labels, text primitives, embedded documents, parametric models, symbol blocks, and OCR-extracted text.
+* **Embedded Project Charter**: Incorporates requirements, acceptance criteria, hard/soft constraints, decision logs, and issue references directly within the project state file.
+* **Infinite Surface & High Precision**: Supports infinite canvas navigation with unified physical coordinates and precision snapping across micro and macro zoom levels.
+* **Physical Engineering Primitives & Styling**: Supports vector geometry, parametric lines, text, frames, tables, hatch patterns, custom line heads, boolean operations, and embedded media assets.

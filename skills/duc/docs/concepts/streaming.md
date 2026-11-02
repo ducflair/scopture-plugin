@@ -1,0 +1,45 @@
+# Chunked Binary Streaming (/docs/concepts/streaming)
+
+
+
+## Overview [#overview]
+
+Traditional graphic formats, CAD files, and web applications typically handle serialization and parsing by loading an entire file into a single, contiguous memory buffer (`ArrayBuffer`).
+
+While this works for lightweight documents, it breaks down catastrophically when files contain embedded media, high-resolution textures, 3D models, or deep version control DAG history. When a project file grows to 2 GB+, 10 GB+, or larger, allocating that much contiguous RAM causes Out-Of-Memory (OOM) crashes, browser tab terminations, and system lockups.
+
+`.duc` solves this by replacing bulk array buffer operations with a **Chunked Binary Streaming Pipeline**.
+
+***
+
+## The Failure of Bulk Serialization [#the-failure-of-bulk-serialization]
+
+When an application serializes or parses a multi-gigabyte file using traditional bulk buffer loading:
+
+1. **Massive Memory Spikes**: The system must allocate 2x to 3x the file size in RAM to hold the raw bytes, parsed JSON/struct trees, and intermediate conversion objects simultaneously.
+2. **Hardware Constraints**: Mobile devices, laptops, and web browser runtimes cannot allocate multi-gigabyte contiguous memory blocks, leading to immediate process crashes.
+3. **UI Thread Freezes**: Bulk parsing blocks the main thread for seconds or minutes, ruining application responsiveness.
+
+***
+
+## The Solution: Bounded Chunked Streaming [#the-solution-bounded-chunked-streaming]
+
+Instead of serializing or parsing an entire `.duc` document in bulk, `.duc` streams binary data in small, bounded chunks (8 MB default chunk size, bounded between 4 MB and 16 MB).
+
+```
+[ Incoming Media / State Stream ] ──( 8 MB Chunks )──> [ SQLite Chunk Tables ] ──( Range Slicing )──> [ Render Pipeline ]
+```
+
+### 1. Indexed Chunk Tables [#1-indexed-chunk-tables]
+
+Large binary attachments, checkpoint data, and delta changesets are partitioned into indexed chunk tables inside the SQLite container:
+
+* `external_file_revision_chunks`: Stores external file attachments in 8 MB chunks.
+* `checkpoint_data_chunks`: Stores full version control snapshot state in 8 MB chunks.
+* `delta_changeset_chunks`: Stores incremental version deltas in 8 MB chunks.
+
+### 2. Constant Memory Footprint [#2-constant-memory-footprint]
+
+Because serialization and parsing operate sequentially over small 8 MB buffers, the application’s RAM consumption remains **strictly constant**.
+
+Whether parsing a 5 MB floorplan or streaming a 10 GB+ industrial dataset, hardware memory usage stays virtually flat with near-zero RAM impact.

@@ -1,0 +1,58 @@
+# Docs
+
+- [Duc File Format](/docs): SQLite-based project-state format for physical-engineering work before execution.
+- Get Started
+  - [Setup & Quick Start](/docs/get_started/setup): Getting started with the duc file format, SDKs, and converter packages.
+  - [Design & Branding](/docs/get_started/figma): Visual design assets for the duc file format.
+
+- ** Definition **
+- Concepts
+  - [Architecture](/docs/concepts/architecture): Binary SQLite container structure, scale capacity, AI compatibility, schema migrations, and relational architecture.
+  - [Why DUC Exists](/docs/concepts/why-duc-exists): Why engineering workflows need a persistent document layer across design, review, and revision cycles.
+  - [Charter & Issues](/docs/concepts/charter-and-issues): How embedded project charters and spatially-anchored issues provide decision traceability, clarity, and geometry-bound intent in .duc.
+  - [Version Control](/docs/concepts/version-control): How .duc embeds a Directed Acyclic Graph (DAG) version control engine using pivot checkpoints, SQLite deltas, and schema migration boundaries.
+  - [Chunked Binary Streaming](/docs/concepts/streaming): How .duc streams binary data in small chunks instead of bulk serialization to achieve constant RAM footprint at extreme scale.
+  - [External Files & Revisions](/docs/concepts/external-files): How .duc decouples raw asset binary payloads from document data structures and manages deliberate point-in-time file revisions.
+  - [Model Element Modularization](/docs/concepts/model-modularization): Compose Python Model Elements as reusable modules with stable imports, transitive dependencies, and a single rendering root.
+  - Elements
+    - [Overview](/docs/concepts/elements/overview): Elements are the fundamental spatial building blocks of .duc, including geometric, document, model, and layout elements.
+    - [Linear Elements](/docs/concepts/elements/linear-element): Vector paths, line heads, element binding, and step-by-step programmatic construction of straight, curved, and networked linear paths.
+    - [Model Elements](/docs/concepts/elements/model-element): Declare typed Python output, persist its artifact and fingerprints, and select a model viewer without changing the element identity.
+    - [Document Elements](/docs/concepts/elements/document-element): Typeset document compilation, Typst markup source code, PDF element rendering behaviors, and DocumentGridConfig layouts in .duc.
+    - [Plot Elements](/docs/concepts/elements/plot-element): Export boundaries, paper space composition, PDF page generation, and PlotLayout margins in .duc.
+    - [Blocks](/docs/concepts/elements/blocks): The conceptual model of master Block definitions, live Instances, granular Overrides, Duplication Arrays, and Block Collections in .duc.
+  - [AI Compatibility](/docs/concepts/ai-compatibility): Why the SQLite database container design and native Python adapter make .duc seamlessly compatible with foundation AI models.
+- Guidelines
+  - [Coordinate Placement and Avoiding Overlaps](/docs/guidelines/avoid-overlaps): Place and update DUC elements without incorrect offsets, accidental duplicates, clipping, or unreadable stacking.
+  - [Deleting Elements](/docs/guidelines/deleting-elements): Delete DUC elements through the format's soft-deletion field while preserving IDs and document history.
+  - [Styling Elements](/docs/guidelines/styling-elements): Compose ordered backgrounds and strokes, control their visibility and geometry, and style closed paths within linear elements.
+  - [Using Fonts](/docs/guidelines/using-fonts): Select and resolve fonts correctly in DUC text, document, and Python model elements.
+- SQL
+  - [Overview](/docs/sql/overview): Querying, mutating, and introspecting gzip-compressed SQLite .duc containers directly using standard SQL and FTS5 indexing.
+  - [API Reference](/docs/sql/api)
+
+- ** Adapters & Reference **
+- Rust
+  - [Rust (ducrs)](/docs/rust/overview): Foundational Rust crate powering the core logic, parsing, serialization, and WebAssembly bindings for all .duc ecosystem adapters.
+  - [API Reference](/docs/rust/api)
+- Python
+  - [Python (ducpy)](/docs/python/overview): Python library featuring fluent Dataclass Builders and direct DucSQL database access.
+  - [API Reference](/docs/python/api)
+- Typescript
+  - [TypeScript (ducjs)](/docs/typescript/overview): TypeScript/JavaScript library  with embedded WASM SQLite engine for reading and writing .duc containers across browser and server runtimes.
+  - [API Reference](/docs/typescript/api)
+- PDF
+  - [PDF Adapter (ducpdf)](/docs/pdf/overview): PDF exporter library for converting .duc document state into vector PDF files.
+  - [API Reference](/docs/pdf/api)
+- SVG
+  - [SVG Adapter (ducsvg)](/docs/svg/overview): SVG exporter library for rendering .duc canvas geometry and elements into compliant SVG markup.
+  - [API Reference](/docs/svg/api)
+
+- ** Resources **
+- Roadmap
+  - [Roadmap Overview](/docs/roadmap/overview): Multi-year development milestones, core architectural objectives, and ecosystem release roadmap for the .duc file format.
+  - [Year 0: Foundations & Architecture Design](/docs/roadmap/y0): Initial design of project-state canvas mechanisms, precision rules, and format specs.
+  - [Year 1: SQLite Schema, SDKs & Converters](/docs/roadmap/y1): Transitioning to SQLite storage, FTS5 search, version control, and multi-language packages.
+  - [Year 2: Production Release & AI Integration](/docs/roadmap/y2): Stable open-source releases, hardware-accelerated rendering, and AI agent tooling.
+- [Updates](/docs/updates): Release history across duc packages and adapters.
+- [Open Source License](/docs/license): The duc file format is protected and licensed under the MIT License. This decision aligns with our commitment to supporting open development and ensuring that our file format can be utilized and contributed to by a wide community of developers, designers, and engineers.
