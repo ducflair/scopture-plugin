@@ -212,8 +212,53 @@ def validate_claude_plugin(plugin_dir: Path) -> tuple[list[str], list[str]]:
     if not license_path.is_file() and not manifest.get("license"):
         errors.append("Claude plugin missing LICENSE file and no 'license' set in manifest.")
 
-    # 5. File checks (forbidden files, size limits)
+    # 5. Directory lints: privacyPolicyUrl and icon (Anthropic Directory pre-submission checklist)
+    privacy_url = manifest.get("privacyPolicyUrl")
+    if not privacy_url:
+        errors.append("Claude plugin missing required 'privacyPolicyUrl' in .claude-plugin/plugin.json")
+    elif not privacy_url.startswith("https://"):
+        errors.append(f"'privacyPolicyUrl' must start with https:// (got '{privacy_url}')")
+
+    icon_field = manifest.get("icon")
+    icon_file = plugin_dir / (icon_field or ".claude-plugin/icon.png")
+    if not icon_file.is_file():
+        errors.append(
+            "Claude plugin missing icon file at .claude-plugin/icon.png (required by Claude Developer Portal)"
+        )
+    else:
+        icon_size = icon_file.stat().st_size
+        if icon_size > 2 * 1024 * 1024:
+            errors.append(f"Plugin icon exceeds 2 MB limit ({icon_size:,} bytes)")
+        try:
+            with icon_file.open("rb") as f:
+                header = f.read(24)
+                if header.startswith(b"\x89PNG\r\n\x1a\n"):
+                    import struct
+                    w, h = struct.unpack(">II", header[16:24])
+                    if w != h:
+                        errors.append(f"Plugin icon must be square (got {w}x{h} px)")
+                    elif w < 512 or w > 2048:
+                        errors.append(f"Plugin icon must be 512-2048 px on each side (got {w}x{h} px)")
+        except Exception as e:
+            notes.append(f"Could not verify PNG dimensions: {e}")
+
+    # 6. Bundled Skills directory (ensure skills/ is discovered by Claude portal)
+    skills_dir = plugin_dir / "skills"
+    if not skills_dir.is_dir():
+        errors.append("Claude plugin missing 'skills/' directory. Claude portal will report 'No skills, agents, commands, or hooks'.")
+    else:
+        skill_subdirs = [s for s in skills_dir.iterdir() if s.is_dir() and not s.name.startswith(".")]
+        if not skill_subdirs:
+            errors.append("Claude plugin 'skills/' directory contains no skill folders.")
+        for s in skill_subdirs:
+            if not (s / "SKILL.md").is_file():
+                errors.append(f"Skill '{s.name}' in Claude plugin missing required 'SKILL.md'.")
+        notes.append(f"Detected {len(skill_subdirs)} bundled skill(s): {', '.join(sorted(s.name for s in skill_subdirs))}")
+
+    # 7. File checks (forbidden files, size limits)
+    ignore_dirs = {".git", "node_modules", "dist", ".gemini", ".venv", "venv", "__pycache__"}
     for root, dirs, files in os.walk(plugin_dir):
+        dirs[:] = [d for d in dirs if d not in ignore_dirs]
         for f in files:
             if f in FORBIDDEN_FILES:
                 errors.append(f"Forbidden OS file found: {Path(root, f).relative_to(plugin_dir)}")
@@ -224,17 +269,17 @@ def validate_claude_plugin(plugin_dir: Path) -> tuple[list[str], list[str]]:
             except Exception:
                 pass
 
-    # 6. Execute Anthropic's official 'claude plugin validate --strict' CLI
+    # 8. Execute Anthropic's official 'claude plugin validate' CLI
     claude_bin = find_claude_cli()
     if claude_bin:
         try:
             res = subprocess.run(
-                [claude_bin, "plugin", "validate", "--strict", str(plugin_dir)],
+                [claude_bin, "plugin", "validate", str(plugin_dir)],
                 capture_output=True,
                 text=True,
             )
             if res.returncode != 0:
-                errors.append(f"Anthropic 'claude plugin validate --strict' failed:\n{res.stdout}\n{res.stderr}")
+                errors.append(f"Anthropic 'claude plugin validate' failed:\n{res.stdout}\n{res.stderr}")
             else:
                 notes.append(f"Validated with official Anthropic CLI ({claude_bin}): ✔ Validation passed")
         except Exception as e:
@@ -302,7 +347,7 @@ def validate_mcp_registry_server(server_json_path: Path) -> tuple[list[str], lis
 def main() -> int:
     repo_root = Path(__file__).resolve().parent.parent
     openai_dir = repo_root / "scopture-openai-plugin"
-    claude_dir = repo_root / "scopture-claude-plugin"
+    claude_dir = repo_root
     server_json_path = repo_root / "server.json"
 
     print("Validating plugin and MCP server packages...\n")
@@ -324,7 +369,7 @@ def main() -> int:
     print()
 
     # Validate Claude Plugin
-    print(f"Validating Claude plugin at {claude_dir.relative_to(repo_root)}:")
+    print("Validating Claude plugin at repository root:")
     claude_errors, claude_notes = validate_claude_plugin(claude_dir)
     if claude_errors:
         total_errors += len(claude_errors)

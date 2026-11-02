@@ -142,8 +142,8 @@ def main() -> int:
     )
     parser.add_argument(
         "--claude-plugin-dir",
-        default="scopture-claude-plugin",
-        help="Directory containing Claude plugin (default: scopture-claude-plugin)",
+        default=".",
+        help="Directory containing Claude plugin (default: .)",
     )
     parser.add_argument(
         "--out-dir",
@@ -275,26 +275,35 @@ def main() -> int:
             print(f"  ✓ openai plugin: {openai_zip.name}")
 
         # 3. Package Claude Plugin (scopture-claude-plugin.zip)
-        if claude_root.is_dir():
+        claude_manifest_src = claude_root / ".claude-plugin" / "plugin.json"
+        if claude_manifest_src.is_file():
             claude_staging = staging_root / "claude-plugin"
-            shutil.copytree(claude_root, claude_staging)
+            claude_staging.mkdir(parents=True, exist_ok=True)
+
+            # Copy .claude-plugin directory (manifest, icon, etc.)
+            shutil.copytree(claude_root / ".claude-plugin", claude_staging / ".claude-plugin")
 
             # Update .claude-plugin/plugin.json version
             claude_manifest = claude_staging / ".claude-plugin" / "plugin.json"
-            if claude_manifest.is_file():
-                update_json_version(claude_manifest, version)
-                if args.in_place and (claude_root / ".claude-plugin" / "plugin.json").is_file():
-                    update_json_version(claude_root / ".claude-plugin" / "plugin.json", version)
+            update_json_version(claude_manifest, version)
+            if args.in_place:
+                update_json_version(claude_manifest_src, version)
+
+            # Copy .mcp.json if present
+            mcp_src = claude_root / ".mcp.json"
+            if mcp_src.is_file():
+                shutil.copy2(mcp_src, claude_staging / ".mcp.json")
+
+            # Copy README and LICENSE
+            readme_src = claude_root / "README.md"
+            if readme_src.is_file():
+                shutil.copy2(readme_src, claude_staging / "README.md")
+            if license_file.is_file():
+                shutil.copy2(license_file, claude_staging / "LICENSE")
 
             # Copy staged skills into plugin's skills/ directory
-            claude_skills_dir = claude_staging / "skills"
-            if claude_skills_dir.exists():
-                shutil.rmtree(claude_skills_dir)
-            shutil.copytree(skills_staging, claude_skills_dir)
-
-            # Ensure LICENSE is present
-            if license_file.is_file() and not (claude_staging / "LICENSE").is_file():
-                shutil.copy2(license_file, claude_staging / "LICENSE")
+            plugin_skills_dir = claude_staging / "skills"
+            shutil.copytree(skills_staging, plugin_skills_dir)
 
             claude_zip = out_dir / "scopture-claude-plugin.zip"
             package_root_contents_zip(claude_staging, claude_zip)
