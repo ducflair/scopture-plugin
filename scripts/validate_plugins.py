@@ -237,12 +237,17 @@ def validate_claude_plugin(plugin_dir: Path) -> tuple[list[str], list[str]]:
     if not license_path.is_file() and not manifest.get("license"):
         errors.append("Claude plugin missing LICENSE file and no 'license' set in manifest.")
 
-    # 5. Directory lints: privacyPolicyUrl and icon (Anthropic Directory pre-submission checklist)
+    # 5. Directory lints: privacyPolicyUrl, supportUrl, termsOfServiceUrl, documentationUrl, and icon
     privacy_url = manifest.get("privacyPolicyUrl")
     if not privacy_url:
         errors.append("Claude plugin missing required 'privacyPolicyUrl' in .claude-plugin/plugin.json")
     elif not privacy_url.startswith("https://"):
         errors.append(f"'privacyPolicyUrl' must start with https:// (got '{privacy_url}')")
+
+    for url_field in ["supportUrl", "termsOfServiceUrl", "documentationUrl"]:
+        val = manifest.get(url_field)
+        if val and not val.startswith("https://"):
+            errors.append(f"'{url_field}' must start with https:// (got '{val}')")
 
     icon_file = plugin_dir / ".claude-plugin" / "icon.png"
     if not icon_file.is_file():
