@@ -3,29 +3,7 @@
   "mcpServers": {
     "scopture": {
       "type": "streamable-http",
-      "url": "https://api.scopture.com/mcp",
-      "extensions": {
-        "com.openai": {
-          "auth": {
-            "type": "oauth",
-            "client": {
-              "mode": "dcr"
-            },
-            "registrationUrl": "https://api.scopture.com/api/auth/oauth2/register",
-            "authorizationUrl": "https://api.scopture.com/api/auth/oauth2/authorize",
-            "tokenUrl": "https://api.scopture.com/api/auth/oauth2/token",
-            "baseScopes": [
-              "openid",
-              "profile",
-              "email",
-              "offline_access",
-              "mcp:read",
-              "mcp:write",
-              "mcp:execute"
-            ]
-          }
-        }
-      }
+      "url": "https://api.scopture.com/mcp"
     }
   }
 }

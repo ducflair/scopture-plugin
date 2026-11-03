@@ -216,11 +216,10 @@ def validate_claude_plugin(plugin_dir: Path) -> tuple[list[str], list[str]]:
     elif not privacy_url.startswith("https://"):
         errors.append(f"'privacyPolicyUrl' must start with https:// (got '{privacy_url}')")
 
-    icon_field = manifest.get("icon")
-    icon_file = plugin_dir / (icon_field or ".claude-plugin/icon.png")
+    icon_file = plugin_dir / ".claude-plugin" / "icon.png"
     if not icon_file.is_file():
         errors.append(
-            "Claude plugin missing icon file at .claude-plugin/icon.png (required by Claude Developer Portal)"
+            "Claude plugin missing icon file at .claude-plugin/icon.png"
         )
     else:
         icon_size = icon_file.stat().st_size

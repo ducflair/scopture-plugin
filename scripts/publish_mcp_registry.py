@@ -123,21 +123,12 @@ def main() -> int:
         return 0
 
     # In GitHub Actions CI, authenticate via OIDC
-    is_github_actions = os.environ.get("GITHUB_ACTIONS") == "true"
-    has_oidc_token = bool(os.environ.get("ACTIONS_ID_TOKEN_REQUEST_TOKEN"))
-
-    if is_github_actions and has_oidc_token:
-        print("Detected GitHub Actions environment with OIDC token. Logging in via github-oidc...")
+    if os.environ.get("GITHUB_ACTIONS") == "true":
+        print("Detected GitHub Actions environment. Logging in via github-oidc...")
         login_res = subprocess.run([mcp_publisher, "login", "github-oidc"], text=True)
         if login_res.returncode != 0:
             print("Failed to authenticate to MCP Registry via github-oidc.", file=sys.stderr)
             return login_res.returncode
-    elif is_github_actions and not has_oidc_token:
-        print(
-            "Warning: Running in GitHub Actions but ACTIONS_ID_TOKEN_REQUEST_TOKEN is missing.\n"
-            "Ensure the workflow job includes 'permissions: id-token: write'.",
-            file=sys.stderr,
-        )
 
     print("Publishing to https://registry.modelcontextprotocol.io...")
     pub_res = subprocess.run([mcp_publisher, "publish", str(server_path)], text=True)

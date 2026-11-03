@@ -74,18 +74,22 @@ def fetch_url(url: str, timeout: int = 25, max_retries: int = 3) -> str:
 
 def parse_fumadocs_sections(content: str) -> list[tuple[str, str, str]]:
     """Parse Fumadocs llms-full markdown into (title, rel_path, markdown_body)."""
-    raw_sections = re.split(r"\n(?=# [^\n]+ \(/docs[^\)]*\))", content)
+    raw_sections = re.split(r"\n(?=# [^\n]+ \(/)", content)
     pages = []
 
     for sec in raw_sections:
         sec = sec.strip()
         if not sec:
             continue
-        m = re.match(r"^# ([^\n]+) \((/docs[^\)]*)\)", sec)
+        m = re.match(r"^# ([^\n]+) \((/[^\)]*)\)", sec)
         if not m:
             continue
         title = m.group(1).strip()
         raw_path = m.group(2).strip()
+
+        # Only process primary English documentation pages under /docs
+        if not raw_path.startswith("/docs"):
+            continue
 
         clean_path = re.sub(r"^/?docs/?", "", raw_path).strip()
         rel_path = "index.md" if not clean_path else f"{clean_path}.md"
@@ -273,10 +277,10 @@ def fetch_sql_reference(dest_dir: Path) -> int:
     (dest_dir / "schema.md").write_text("".join(md_parts), encoding="utf-8")
     (dest_dir / "llms.txt").write_text("\n".join(llms_lines), encoding="utf-8")
 
-    written_files = {"index.html", "schema.md", "llms.txt"}
+    written_files = {"schema.md", "llms.txt"}
     _cleanup_stale_files(dest_dir, written_files, {".md", ".txt", ".html"})
 
-    print(f"    ✓ Added docs-sql/llms.txt, schema.md, and index.html ({len(tables_found)} tables/views)")
+    print(f"    ✓ Added docs-sql/llms.txt and schema.md ({len(tables_found)} tables/views)")
     return len(tables_found)
 
 

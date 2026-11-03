@@ -1,4 +1,6 @@
-# README
+# Agent Skills
+
+Engineering agent skills, Model Context Protocol (MCP) integrations, and automation tools for Scopture and DUC. These skills equip AI assistants and coding agents with domain knowledge to inspect models, review drawings, manage issues, and trace technical decisions across project workflows.
 
 ## Install
 
