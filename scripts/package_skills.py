@@ -8,17 +8,17 @@ For each skill folder in skills/:
    - <skill_name>-<version>.tar.gz
    - <skill_name>-<version>.zip
 
-For OpenAI Plugin (./scopture-openai-plugin):
+For OpenAI Plugin (./openai-plugin):
 1. Injects release version into plugin.json
-2. Bundles the skills from skills/ (with docs and updated versions) into skills/
+2. Bundles the skills from common/skills/ (with docs and updated versions) into skills/
 3. Packages root contents directly into:
-   - scopture-openai-plugin.zip (per OpenAI specs: https://developers.openai.com/plugins/build/plugins)
+   - openai-plugin.zip (per OpenAI specs: https://developers.openai.com/plugins/build/plugins)
 
-For Claude Plugin (./scopture-claude-plugin):
+For Claude Plugin (./common):
 1. Injects release version into .claude-plugin/plugin.json
-2. Bundles the skills from skills/ into skills/
+2. Bundles the skills from common/skills/ into skills/
 3. Packages into:
-   - scopture-claude-plugin.zip (per Claude pre-submission checklist: https://claude.com/docs/plugins/pre-submission-checklist)
+   - claude-plugin.zip (per Claude pre-submission checklist: https://claude.com/docs/plugins/pre-submission-checklist)
 
 Generates SHA-256 checksums in checksums.txt.
 """
@@ -130,20 +130,21 @@ def main() -> int:
         required=True,
         help="Release version string (e.g. 0.1.0, without leading 'v')",
     )
+    default_skills = "common/skills" if (Path(__file__).resolve().parent.parent / "common" / "skills").is_dir() else "skills"
     parser.add_argument(
         "--skills-dir",
-        default="skills",
-        help="Directory containing skill subfolders (default: skills)",
+        default=default_skills,
+        help=f"Directory containing skill subfolders (default: {default_skills})",
     )
     parser.add_argument(
         "--openai-plugin-dir",
-        default="scopture-openai-plugin",
-        help="Directory containing OpenAI plugin (default: scopture-openai-plugin)",
+        default="openai-plugin",
+        help="Directory containing OpenAI plugin (default: openai-plugin)",
     )
     parser.add_argument(
         "--claude-plugin-dir",
-        default=".",
-        help="Directory containing Claude plugin (default: .)",
+        default="common",
+        help="Directory containing Claude plugin (default: common)",
     )
     parser.add_argument(
         "--out-dir",
@@ -247,7 +248,7 @@ def main() -> int:
             created_files.extend([tar_versioned, zip_versioned])
             print(f"  ✓ skill package: {tar_versioned.name}, {zip_versioned.name}")
 
-        # 2. Package OpenAI Plugin (scopture-openai-plugin.zip)
+        # 2. Package OpenAI Plugin (openai-plugin.zip)
         if openai_root.is_dir():
             openai_staging = staging_root / "openai-plugin"
             shutil.copytree(openai_root, openai_staging)
@@ -269,12 +270,12 @@ def main() -> int:
             if license_file.is_file() and not (openai_staging / "LICENSE").is_file():
                 shutil.copy2(license_file, openai_staging / "LICENSE")
 
-            openai_zip = out_dir / "scopture-openai-plugin.zip"
+            openai_zip = out_dir / "openai-plugin.zip"
             package_root_contents_zip(openai_staging, openai_zip)
             created_files.append(openai_zip)
             print(f"  ✓ openai plugin: {openai_zip.name}")
 
-        # 3. Package Claude Plugin (scopture-claude-plugin.zip)
+        # 3. Package Claude Plugin (claude-plugin.zip)
         claude_manifest_src = claude_root / ".claude-plugin" / "plugin.json"
         if claude_manifest_src.is_file():
             claude_staging = staging_root / "claude-plugin"
@@ -305,7 +306,7 @@ def main() -> int:
             plugin_skills_dir = claude_staging / "skills"
             shutil.copytree(skills_staging, plugin_skills_dir)
 
-            claude_zip = out_dir / "scopture-claude-plugin.zip"
+            claude_zip = out_dir / "claude-plugin.zip"
             package_root_contents_zip(claude_staging, claude_zip)
             created_files.append(claude_zip)
             print(f"  ✓ claude plugin: {claude_zip.name}")

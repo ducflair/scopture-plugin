@@ -303,12 +303,13 @@ def main() -> int:
     parser.add_argument(
         "--to-skills",
         action="store_true",
-        help="Directly populate skills/duc and skills/scopture doc directories",
+        help="Directly populate common/skills/duc and common/skills/scopture doc directories",
     )
 
     args = parser.parse_args()
 
-    out_base = Path("skills") if args.to_skills else args.out_dir
+    default_skills = Path("common/skills") if Path("common/skills").is_dir() else Path("skills")
+    out_base = default_skills if args.to_skills else args.out_dir
     if not out_base:
         parser.error("Please specify --out-dir <path> or --to-skills")
 

@@ -39,7 +39,7 @@ jobs:
         run: npm install -g @anthropic-ai/claude-code
 
       - name: Validate Claude plugin with Claude CLI
-        run: claude plugin validate .
+        run: claude plugin validate common
 
       - name: Validate plugins (OpenAI and Claude) and MCP server
         run: python3 scripts/validate_plugins.py

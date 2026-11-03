@@ -111,7 +111,10 @@ def validate_skill_folder(skill_dir: Path) -> list[str]:
 
 
 def main() -> int:
-    skills_root = Path(__file__).resolve().parent.parent / "skills"
+    repo_root = Path(__file__).resolve().parent.parent
+    skills_root = repo_root / "common" / "skills"
+    if not skills_root.is_dir():
+        skills_root = repo_root / "skills"
     if not skills_root.is_dir():
         print(f"Error: skills directory not found at {skills_root}", file=sys.stderr)
         return 1

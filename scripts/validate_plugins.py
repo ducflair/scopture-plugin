@@ -87,6 +87,28 @@ def validate_openai_plugin(plugin_dir: Path) -> tuple[list[str], list[str]]:
                 if not interface.get(req):
                     errors.append(f"extensions.com.openai.interface missing '{req}'")
 
+            short_desc = interface.get("shortDescription", "")
+            if len(short_desc) > 30:
+                errors.append(
+                    f"extensions.com.openai.interface.shortDescription ('{short_desc}') exceeds 30 characters ({len(short_desc)} chars). Subtitle must be 30 characters or fewer."
+                )
+
+            support_url = interface.get("supportURL")
+            if not support_url:
+                errors.append("extensions.com.openai.interface missing required 'supportURL'.")
+            elif not support_url.startswith("https://"):
+                errors.append(f"extensions.com.openai.interface.supportURL must start with https://: '{support_url}'")
+
+            logo_rel = interface.get("logo") or interface.get("icon")
+            logo_file = (plugin_dir / logo_rel) if logo_rel else None
+            if not logo_file or not logo_file.is_file():
+                if (plugin_dir / "assets" / "icon.png").is_file():
+                    logo_file = plugin_dir / "assets" / "icon.png"
+                elif (plugin_dir / "icon.png").is_file():
+                    logo_file = plugin_dir / "icon.png"
+                else:
+                    errors.append("OpenAI plugin missing app icon asset (required by OpenAI portal).")
+
     # 2. mcp.json
     mcp_path = plugin_dir / "mcp.json"
     if not mcp_path.is_file():
@@ -203,6 +225,12 @@ def validate_claude_plugin(plugin_dir: Path) -> tuple[list[str], list[str]]:
         text = readme_path.read_text(encoding="utf-8")
         if not text.strip():
             errors.append("README.md is empty.")
+        else:
+            word_count = count_non_code_words(text)
+            if word_count < 40:
+                errors.append(
+                    f"README.md has only {word_count} non-code words. Claude pre-submission checklist requires >= 40 words."
+                )
 
     # 4. LICENSE
     license_path = plugin_dir / "LICENSE"
@@ -342,8 +370,8 @@ def validate_mcp_registry_server(server_json_path: Path) -> tuple[list[str], lis
 
 def main() -> int:
     repo_root = Path(__file__).resolve().parent.parent
-    openai_dir = repo_root / "scopture-openai-plugin"
-    claude_dir = repo_root
+    openai_dir = repo_root / "openai-plugin"
+    claude_dir = repo_root / "common"
     server_json_path = repo_root / "server.json"
 
     print("Validating plugin and MCP server packages...\n")
@@ -365,7 +393,7 @@ def main() -> int:
     print()
 
     # Validate Claude Plugin
-    print("Validating Claude plugin at repository root:")
+    print(f"Validating Claude plugin at {claude_dir.relative_to(repo_root)}:")
     claude_errors, claude_notes = validate_claude_plugin(claude_dir)
     if claude_errors:
         total_errors += len(claude_errors)

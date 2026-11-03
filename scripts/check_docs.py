@@ -78,14 +78,15 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description="Verify that git-tracked docs folders match live remote documentation."
     )
+    repo_root = Path(__file__).resolve().parent.parent
+    default_skills = "common/skills" if (repo_root / "common" / "skills").is_dir() else "skills"
     parser.add_argument(
         "--skills-dir",
-        default="skills",
-        help="Root skills directory (default: skills)",
+        default=default_skills,
+        help=f"Root skills directory (default: {default_skills})",
     )
     args = parser.parse_args()
 
-    repo_root = Path(__file__).resolve().parent.parent
     skills_root = (repo_root / args.skills_dir).resolve()
 
     if not skills_root.is_dir():
