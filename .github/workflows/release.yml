@@ -50,6 +50,9 @@ jobs:
   release:
     needs: validate
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    concurrency:
+      group: release-${{ github.ref }}
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -75,7 +78,20 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Calculate the next release version
+        id: release-plan
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/plan_release.mjs
+
+      - name: Package release archives
+        if: steps.release-plan.outputs.version != ''
+        uses: ./.github/actions/package-release
+        with:
+          version: ${{ steps.release-plan.outputs.version }}
+
       - name: Run semantic-release
+        if: steps.release-plan.outputs.version != ''
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release

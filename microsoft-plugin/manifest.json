@@ -1,0 +1,38 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.29/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.29",
+  "version": "0.0.0",
+  "id": "c5e23d69-effd-5516-8eb8-8a1a4e0fe13e",
+  "developer": {
+    "name": "Ducflair",
+    "websiteUrl": "https://ducflair.com/",
+    "privacyUrl": "https://site.scopture.com/p/privacy",
+    "termsOfUseUrl": "https://site.scopture.com/p/terms"
+  },
+  "name": {
+    "short": "Scopture",
+    "full": "Scopture: Where physical engineering projects take shape before execution"
+  },
+  "description": {
+    "short": "Work on engineering projects",
+    "full": "Work directly with physical engineering projects in Scopture. Inspect models, drawings, canvas state, and .duc files while keeping the surrounding project context in view. Analyze project data, run Python, create simulations, develop CAD and BIM models, capture screenshots, manage issues and project charters, trace requirements and decisions, and apply changes directly to the work."
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#D95B52",
+  "agentSkills": [],
+  "agentConnectors": [
+    {
+      "id": "scopture-mcp",
+      "displayName": "Scopture",
+      "description": "Work directly with physical engineering projects in Scopture. Inspect models, drawings, canvas state, and .duc files while keeping the surrounding project context in view. Analyze project data, run Python, create simulations, develop CAD personality, CAD and BIM models, capture screenshots, manage issues and project charters, trace requirements and decisions, and apply changes directly to the work.",
+      "toolSource": {
+        "remoteMcpServer": {
+          "mcpServerUrl": "https://api.scopture.com/mcp"
+        }
+      }
+    }
+  ]
+}

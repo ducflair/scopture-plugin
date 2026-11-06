@@ -3,5 +3,6 @@ __MACOSX/
 *.zip
 *.tar.gz
 dist/
+.release-staging/
 __pycache__/
 *.pyc

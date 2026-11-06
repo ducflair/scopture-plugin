@@ -11,19 +11,18 @@ module.exports = {
     // 2. Generate release notes from commits
     '@semantic-release/release-notes-generator',
 
-    // 3. Package skill folders into dist/, publish to MCP Registry, and notify skills.sh on success
+    // 3. Verify the planned package version, publish to MCP Registry, and notify skills.sh on success
     [
       '@semantic-release/exec',
       {
-        prepareCmd:
-          'python3 scripts/package_skills.py --version ${nextRelease.version} --out-dir dist',
+        prepareCmd: 'python3 scripts/verify_release_plan.py --version ${nextRelease.version}',
         publishCmd:
           'python3 scripts/publish_mcp_registry.py --version ${nextRelease.version} || true',
         successCmd: 'npx --yes skills add ducflair/scopture-plugin --list || true',
       },
     ],
 
-    // 4. Create git tag, GitHub Release, and upload skill packages
+    // 4. Create git tag, GitHub Release, and upload release packages
     [
       '@semantic-release/github',
       {

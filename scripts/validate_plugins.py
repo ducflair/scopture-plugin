@@ -237,24 +237,34 @@ def validate_claude_plugin(plugin_dir: Path) -> tuple[list[str], list[str]]:
     if not license_path.is_file() and not manifest.get("license"):
         errors.append("Claude plugin missing LICENSE file and no 'license' set in manifest.")
 
-    # 5. Directory lints: privacyPolicyUrl, supportUrl, termsOfServiceUrl, documentationUrl, and icon
-    privacy_url = manifest.get("privacyPolicyUrl")
-    if not privacy_url:
-        errors.append("Claude plugin missing required 'privacyPolicyUrl' in .claude-plugin/plugin.json")
-    elif not privacy_url.startswith("https://"):
-        errors.append(f"'privacyPolicyUrl' must start with https:// (got '{privacy_url}')")
-
-    for url_field in ["supportUrl", "termsOfServiceUrl", "documentationUrl"]:
+    # 5. Anthropic directory listing metadata
+    for url_field in ["documentationUrl", "supportUrl", "privacyPolicyUrl", "termsOfServiceUrl"]:
         val = manifest.get(url_field)
-        if val and not val.startswith("https://"):
+        if not isinstance(val, str) or not val.strip():
+            errors.append(f"Claude plugin missing required '{url_field}' in .claude-plugin/plugin.json")
+        elif not val.startswith("https://"):
             errors.append(f"'{url_field}' must start with https:// (got '{val}')")
 
-    icon_file = plugin_dir / ".claude-plugin" / "icon.png"
-    if not icon_file.is_file():
-        errors.append(
-            "Claude plugin missing icon file at .claude-plugin/icon.png"
-        )
+    icon_ref = manifest.get("icon")
+    icon_file = None
+    if not isinstance(icon_ref, str) or not icon_ref.strip():
+        errors.append("Claude plugin missing required 'icon' path in .claude-plugin/plugin.json")
     else:
+        icon_path = Path(icon_ref)
+        plugin_root = plugin_dir.resolve()
+        resolved_icon = (plugin_root / icon_path).resolve()
+        if (
+            icon_path.is_absolute()
+            or ".." in icon_path.parts
+            or not resolved_icon.is_relative_to(plugin_root)
+        ):
+            errors.append(f"Claude plugin 'icon' must be a relative path inside the plugin (got '{icon_ref}')")
+        elif not resolved_icon.is_file():
+            errors.append(f"Claude plugin icon file does not exist: '{icon_ref}'")
+        else:
+            icon_file = resolved_icon
+
+    if icon_file:
         icon_size = icon_file.stat().st_size
         if icon_size > 2 * 1024 * 1024:
             errors.append(f"Plugin icon exceeds 2 MB limit ({icon_size:,} bytes)")

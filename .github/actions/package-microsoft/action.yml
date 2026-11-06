@@ -1,0 +1,40 @@
+name: Package Microsoft Copilot Cowork plugin
+description: Build the Microsoft 365 app-package ZIP containing skills and the remote MCP connector.
+inputs:
+  version:
+    description: Semantic-release version to embed in the package manifest.
+    required: true
+  plugin-dir:
+    description: Directory containing the Microsoft plugin manifest and package assets.
+    required: false
+    default: microsoft-plugin
+  skills-dir:
+    description: Directory containing the versioned shared skills.
+    required: false
+    default: .release-staging/skills
+  output-dir:
+    description: Directory in which to write the ZIP.
+    required: false
+    default: dist
+outputs:
+  package-path:
+    description: Path to the generated Microsoft Cowork package ZIP.
+    value: ${{ steps.package.outputs.package-path }}
+runs:
+  using: composite
+  steps:
+    - id: package
+      name: Build Microsoft Cowork ZIP
+      shell: bash
+      env:
+        RELEASE_VERSION: ${{ inputs.version }}
+        PLUGIN_DIR: ${{ inputs.plugin-dir }}
+        SKILLS_DIR: ${{ inputs.skills-dir }}
+        OUTPUT_DIR: ${{ inputs.output-dir }}
+      run: |
+        python3 providers/microsoft/package.py \
+          --version "$RELEASE_VERSION" \
+          --plugin-dir "$PLUGIN_DIR" \
+          --skills-dir "$SKILLS_DIR" \
+          --out-dir "$OUTPUT_DIR"
+        echo "package-path=$OUTPUT_DIR/scopture-microsoft-cowork-plugin.zip" >> "$GITHUB_OUTPUT"

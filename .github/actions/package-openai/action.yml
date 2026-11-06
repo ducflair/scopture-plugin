@@ -1,0 +1,34 @@
+name: Package OpenAI plugin
+description: Build the OpenAI Agent Plugin ZIP using the shared versioned skills.
+inputs:
+  version:
+    description: Semantic-release version to embed in the plugin manifest.
+    required: true
+  skills-dir:
+    description: Directory containing the versioned shared skills.
+    required: false
+    default: .release-staging/skills
+  output-dir:
+    description: Directory in which to write the ZIP.
+    required: false
+    default: dist
+outputs:
+  package-path:
+    description: Path to the generated OpenAI plugin ZIP.
+    value: ${{ steps.package.outputs.package-path }}
+runs:
+  using: composite
+  steps:
+    - id: package
+      name: Build OpenAI ZIP
+      shell: bash
+      env:
+        RELEASE_VERSION: ${{ inputs.version }}
+        SKILLS_DIR: ${{ inputs.skills-dir }}
+        OUTPUT_DIR: ${{ inputs.output-dir }}
+      run: |
+        python3 providers/openai/package.py \
+          --version "$RELEASE_VERSION" \
+          --skills-dir "$SKILLS_DIR" \
+          --out-dir "$OUTPUT_DIR"
+        echo "package-path=$OUTPUT_DIR/scopture-openai-plugin.zip" >> "$GITHUB_OUTPUT"
