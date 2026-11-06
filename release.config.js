@@ -19,7 +19,7 @@ module.exports = {
           'python3 scripts/package_skills.py --version ${nextRelease.version} --out-dir dist',
         publishCmd:
           'python3 scripts/publish_mcp_registry.py --version ${nextRelease.version} || true',
-        successCmd: 'npx --yes skills add ducflair/skills --list || true',
+        successCmd: 'npx --yes skills add ducflair/scopture-plugin --list || true',
       },
     ],
 

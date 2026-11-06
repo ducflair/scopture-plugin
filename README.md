@@ -5,13 +5,13 @@ Engineering agent skills, Model Context Protocol (MCP) integrations, and automat
 ## Install
 
 ```bash
-npx skills add ducflair/skills --skill duc
+npx skills add ducflair/scopture-plugin --skill duc
 ```
 
 Or install all skills from this repository:
 
 ```bash
-npx skills add ducflair/skills
+npx skills add ducflair/scopture-plugin
 ```
 
 ## Development
