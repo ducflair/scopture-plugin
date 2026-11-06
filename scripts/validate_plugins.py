@@ -247,9 +247,11 @@ def validate_claude_plugin(plugin_dir: Path) -> tuple[list[str], list[str]]:
 
     icon_ref = manifest.get("icon")
     icon_file = None
-    if not isinstance(icon_ref, str) or not icon_ref.strip():
-        errors.append("Claude plugin missing required 'icon' path in .claude-plugin/plugin.json")
-    else:
+    if icon_ref is not None:
+        if not isinstance(icon_ref, str) or not icon_ref.strip():
+            errors.append("Claude plugin 'icon' must be a non-empty relative path when provided")
+            icon_ref = None
+    if icon_ref:
         icon_path = Path(icon_ref)
         plugin_root = plugin_dir.resolve()
         resolved_icon = (plugin_root / icon_path).resolve()
