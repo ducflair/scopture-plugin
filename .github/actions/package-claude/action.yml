@@ -31,4 +31,4 @@ runs:
           --version "$RELEASE_VERSION" \
           --skills-dir "$SKILLS_DIR" \
           --out-dir "$OUTPUT_DIR"
-        echo "package-path=$OUTPUT_DIR/scopture-claude-plugin.zip" >> "$GITHUB_OUTPUT"
+        echo "package-path=$OUTPUT_DIR/claude-scopture-plugin-$RELEASE_VERSION.zip" >> "$GITHUB_OUTPUT"

@@ -29,7 +29,7 @@ def main() -> int:
         raise FileNotFoundError("OpenAI plugin manifest or staged shared skills were not found")
 
     out_dir.mkdir(parents=True, exist_ok=True)
-    output_zip = out_dir / "scopture-openai-plugin.zip"
+    output_zip = out_dir / f"openai-scopture-plugin-{version}.zip"
     with tempfile.TemporaryDirectory(prefix="scopture-openai-") as temp_dir:
         package_root = Path(temp_dir) / "package"
         copy_directory(plugin_source, package_root)

@@ -28,7 +28,7 @@ def main() -> int:
         raise FileNotFoundError("Claude plugin manifest or staged shared skills were not found")
 
     out_dir.mkdir(parents=True, exist_ok=True)
-    output_zip = out_dir / "scopture-claude-plugin.zip"
+    output_zip = out_dir / f"claude-scopture-plugin-{version}.zip"
     with tempfile.TemporaryDirectory(prefix="scopture-claude-") as temp_dir:
         package_root = Path(temp_dir) / "package"
         package_root.mkdir()

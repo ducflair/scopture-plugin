@@ -37,4 +37,4 @@ runs:
           --plugin-dir "$PLUGIN_DIR" \
           --skills-dir "$SKILLS_DIR" \
           --out-dir "$OUTPUT_DIR"
-        echo "package-path=$OUTPUT_DIR/scopture-microsoft-cowork-plugin.zip" >> "$GITHUB_OUTPUT"
+        echo "package-path=$OUTPUT_DIR/microsoft-scopture-plugin-$RELEASE_VERSION.zip" >> "$GITHUB_OUTPUT"

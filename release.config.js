@@ -29,6 +29,7 @@ module.exports = {
         assets: [
           'dist/*.tar.gz',
           'dist/*.zip',
+          'dist/*.pdf',
           'dist/checksums.txt',
           'server.json',
         ],

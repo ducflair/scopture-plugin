@@ -165,7 +165,7 @@ def main() -> int:
         raise ValueError("The Microsoft connector requires an HTTPS remote MCP server")
 
     out_dir.mkdir(parents=True, exist_ok=True)
-    output_zip = out_dir / "scopture-microsoft-cowork-plugin.zip"
+    output_zip = out_dir / f"microsoft-scopture-plugin-{version}.zip"
 
     with tempfile.TemporaryDirectory(prefix="scopture-cowork-") as temp_dir:
         package_root = Path(temp_dir) / "package"

@@ -44,6 +44,14 @@ def main() -> int:
             ]
             for package_script in sorted((repo_root / "providers").glob("*/package.py"))
         ],
+        [
+            sys.executable,
+            "scripts/generate_offer_testing_guide.py",
+            "--version",
+            version,
+            "--out-dir",
+            args.out_dir,
+        ],
         [sys.executable, "scripts/package_checksums.py", "--out-dir", args.out_dir],
     ]
     for command in commands:

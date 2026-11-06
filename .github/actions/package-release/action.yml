@@ -1,5 +1,5 @@
 name: Package release artifacts
-description: Stage shared skills and run each provider-specific package action.
+description: Stage shared skills, package providers, and generate the offer testing guide.
 inputs:
   version:
     description: Semantic-release version to embed in every package.
@@ -9,7 +9,7 @@ inputs:
     required: false
     default: .release-staging/skills
   output-dir:
-    description: Directory in which to write release archives.
+    description: Directory in which to write release artifacts.
     required: false
     default: dist
 outputs:
@@ -20,11 +20,17 @@ outputs:
     description: Path to the Claude plugin ZIP.
     value: ${{ steps.package-claude.outputs.package-path }}
   microsoft-package-path:
-    description: Path to the Microsoft Cowork ZIP.
+    description: Path to the versioned Microsoft ZIP.
     value: ${{ steps.package-microsoft.outputs.package-path }}
+  offer-testing-guide-path:
+    description: Path to the provider-neutral offer testing guide PDF.
+    value: ${{ steps.testing-guide.outputs.package-path }}
 runs:
   using: composite
   steps:
+    - name: Install PDF generator dependency
+      shell: bash
+      run: python3 -m pip install --disable-pip-version-check -r requirements-release.txt
     - name: Package shared skills
       shell: bash
       env:
@@ -54,6 +60,17 @@ runs:
         version: ${{ inputs.version }}
         skills-dir: ${{ inputs.staging-dir }}
         output-dir: ${{ inputs.output-dir }}
+    - id: testing-guide
+      name: Generate versioned offer testing guide
+      shell: bash
+      env:
+        RELEASE_VERSION: ${{ inputs.version }}
+        OUTPUT_DIR: ${{ inputs.output-dir }}
+      run: |
+        python3 scripts/generate_offer_testing_guide.py \
+          --version "$RELEASE_VERSION" \
+          --out-dir "$OUTPUT_DIR"
+        echo "package-path=$OUTPUT_DIR/offer-testing-guide-scopture-${RELEASE_VERSION#v}.pdf" >> "$GITHUB_OUTPUT"
     - name: Write release checksums
       shell: bash
       env:
