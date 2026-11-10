@@ -17,6 +17,7 @@ The `scopture` CLI ships with the Scopture desktop app. It works on local `.duc`
 
 - **Read-only:** `ls`, `cat`, `elements`, `run-sql` (default read-only), `diff`, `files list`, `charter get`, `issues list`, `drawing get`, `auth status`, `ps`, `desktop status`.
 - **Mutates drawing state:**
+  - `charter rename <target> <name>`: changes the stored drawing name (charter title) locally or remotely. For a local `.duc`, the disk filename stays the same; remote renames require drawing edit access.
   - `run-python`: executes Python scripts in the sandbox. If `update_drawing(patch)` is called, modifies drawing elements and atomically re-compresses local `.duc` files or commits remote drawing changes.
   - `run-sql --mutate`: executes mutative SQL statements directly, persisting changes to local `.duc` files or remote drawings.
 - **Writes a file:** `render`, `export`, `files extract`. Direct output with `-o` to a scratch or outputs directory, never over the user's source drawing.

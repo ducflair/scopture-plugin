@@ -6,3 +6,4 @@ dist/
 .release-staging/
 __pycache__/
 *.pyc
+.coms

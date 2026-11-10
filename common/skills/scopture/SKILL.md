@@ -42,6 +42,7 @@ Choose by what the output is for, not only by the object's category. Use the liv
 * **Native DUC elements**: Use for anything the user may select, restyle, or dimension: schematics, wiring diagrams, P&IDs, tables, annotations, and text. Compute with the engineering stack, then emit elements.
 * **Raster images (PNG/JPEG)**: Use for computed, read-only visuals such as matplotlib plots, simulation contours, heatmaps, and renders. PNG for plots and diagrams, JPEG for photographic content.
 * **SVG**: Use when vector fidelity matters but element-by-element editing does not, such as charts or vector artwork. If it needs to stay editable, rebuild it as native elements. Check the `ducsvg` adapter reference for conversion options.
+* **Mermaid diagrams**: For a Python Model Element, use the sandbox built-in `get_svg_from_mermaid(source, *, css="")`. Emit the SVG once from the rendering root with `emit_output(get_svg_from_mermaid(source), kind="svg")`. Multiline source can include common indentation and surrounding blank lines, using `"""` syntax is favorable. The optional `css` accepts inline `--pele-*` declarations such as `--pele-surface: #e5eeff;` and defaults to the Scopture theme.
 * **PDF / Typst**: Use for documents such as data sheets, calculation reports, and specification summaries. Typst sources are validated by the sandbox on submit.
 * **Delivery**: Embed files through the patch's `external_files` map and reference them from an element. Follow the live `run_python_code` description for the exact fields.
 
@@ -58,7 +59,7 @@ The MCP tool registry and the Python sandbox expose different interfaces:
 * **MCP `get_elements` tool**: Returns compact element data and can filter by type, IDs, or bounding box. Prefer it when full drawing parsing is unnecessary.
 * **MCP `run_python_code` tool**: Submits a Python job. It is asynchronous by default; submit once and poll the returned `jobId` with `check_python_run_job`.
 * **MCP `run_sqlite` tool**: Runs read or mutate SQL modes through the same asynchronous job flow.
-* **Python sandbox**: Runs submitted code in an isolated Python 3.12 environment with the active drawing, requested external files, model-output capture, and injected helper functions. Treat the live `run_python_code` tool description as the only reference for helper names and signatures.
+* **Python sandbox**: Runs submitted code in an isolated Python 3.12 environment with the active drawing, requested external files, model-output capture, and injected helper functions. Use the live `run_python_code` tool description for the MCP job contract.
 
 ---
 
