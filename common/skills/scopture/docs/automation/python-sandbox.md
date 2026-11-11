@@ -7,7 +7,7 @@ Scopture’s Python sandbox runs Model Elements and drawing automation in a mana
 ## Where Code Runs [#where-code-runs]
 
 * **Desktop:** the installed local sandbox is the default for both local and remote drawings, including background output and thumbnail generation. Remote drawing access still requires authorization.
-* **CLI:** `scopture run-python` uses the installed desktop sandbox when available, including for remote IDs. Pass `--server` to request cloud execution explicitly.
+* **CLI:** `scopture run-python` starts its own worker from the installed runtime profile while the desktop app is closed. It works offline with a local `.duc` after setup. A remote drawing ID still needs a session and network access. Pass `--server` with a remote ID to opt into cloud compute.
 * **Browser and mobile:** an authorized cloud drawing on an entitled paid plan uses the server worker. Offline Python execution requires desktop.
 
 Desktop and server derive their dependencies from the same sandbox `pyproject.toml` and lockfile and use the same worker implementation. Native wheels, operating-system libraries and graphics backends still require platform-specific verification.
@@ -24,7 +24,7 @@ A **drawing-level job**, invoked through the CLI or MCP, receives a drawing snap
 
 ### Submitting and Polling Jobs [#submitting-and-polling-jobs]
 
-MCP `run_python_code` returns a `jobId`; `waitForCompletionMs` defaults to `0`. Submit once and poll that ID with `check_python_run_job` until it completes or fails. Each polling call waits at most 20 seconds, even when a longer wait is requested. A pending response is not a failed job: do not rerun pending code, particularly mutations. The CLI handles remote job polling for `run-python` and `run-sql`.
+MCP `run_python_code` returns a `jobId`; `waitForCompletionMs` defaults to `0`. Submit once and poll that ID with `check_python_run_job` until it completes or fails. Each polling call waits at most 15 seconds, even when a longer wait is requested. Drawing updates commit in the background. Keep the same job ID while it is queued, running, or applying. The CLI polls automatically and prints the ID for `scopture check-job` if the job takes longer than its wait.
 
 Import installed libraries explicitly and declare model output:
 
@@ -38,6 +38,7 @@ emit_output(Box(20, 10, 5), kind="parametric")
 | Interface                                                   | Purpose                                                                                                                                               |
 | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `emit_output(value, kind=..., mime_type=..., filename=...)` | Declare the rendering root’s output. Use one output per root.                                                                                         |
+| `get_svg_from_mermaid(source, css="")`                      | Render Mermaid with Pele and return a standalone SVG string.                                                                                          |
 | `show(*objects, **options)`                                 | Compatibility helper for supported CAD/IFC objects, including `ocp_vscode.show`. Prefer explicit `emit_output` for new scripts.                       |
 | `get_drawing()`                                             | Return current `.duc` bytes when the job has a drawing snapshot; it is not a drawing metadata dictionary.                                             |
 | `update_drawing(patch)`                                     | Serialize and validate an intended drawing patch, then merge records by ID. Omitted records remain. Rendering and export jobs reject drawing updates. |
@@ -93,6 +94,23 @@ plt.close(fig)
 emit_output(output.getvalue(), kind="image", mime_type="image/png", filename="force.png")
 ```
 
+### Emit a Mermaid Diagram [#emit-a-mermaid-diagram]
+
+Pass Mermaid source to the built-in `get_svg_from_mermaid` helper, then emit the returned SVG as your Model Element’s output:
+
+```python
+svg = get_svg_from_mermaid("""
+    flowchart LR
+    A[Plan] --> B[Build]
+    B --> C[Review]
+""", css="--pele-surface: #e5eeff; --pele-border: #2457a6;")
+emit_output(svg, kind="svg", filename="workflow.svg")
+```
+
+Pele runs inside the sandbox without any imports or external runtime setup. The helper removes common indentation and trims surrounding whitespace, so multiline strings can start on a blank line. Invalid Mermaid fails the run with the parser’s message, line, column, and source excerpt when available.
+
+The SVG uses the Scopture theme by default. The optional `css` argument accepts inline `--pele-*` variable declarations up to 4 KiB. Pass declarations directly, without selectors or braces. Variables you omit keep their default values.
+
 ## Reuse Geometry in Simulations [#reuse-geometry-in-simulations]
 
 Keep the mechanical model in one Model Element. Import its actual solids, meshes, dimensions or functions from each study, then emit that study’s own image or table. Avoid copying the source assembly into every simulation.
@@ -108,7 +126,7 @@ In this example the source Model Element must have the stable ID `geometry` and 
 
 ## Drawing Updates [#drawing-updates]
 
-Submit complete valid changed records with `update_drawing({"elements": [...]})`. The helper accepts a state dictionary, a compatible `ducpy` object, or valid `.duc` bytes. Dictionary and object inputs are serialized with embedded-code validation. Matching IDs update existing records, new IDs add records, and omitted records remain unchanged. Preserve existing IDs and memberships; do not submit the entire drawing merely to change one item. Inspect the result, then render it for visual QA.
+Submit complete changed records to the MCP `update_drawing` tool or CLI `update-drawing` command when the patch is already JSON. For scripted changes, call the injected `update_drawing({"elements": [...]})` helper. The helper accepts a state dictionary, a compatible `ducpy` object, or valid `.duc` bytes. Dictionary and object inputs are serialized with embedded-code validation. Matching IDs update existing records, new IDs add records, and omitted records remain unchanged. Preserve existing IDs and memberships; do not submit the entire drawing merely to change one item. Inspect the result, then render it for visual QA.
 
 ## Capability mapping [#capability-mapping]
 

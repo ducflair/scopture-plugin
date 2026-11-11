@@ -59,11 +59,14 @@ Remote CLI commands and MCP tools use the same validated backend operations and 
 | Capability                        | CLI                                              | MCP                                                        |
 | --------------------------------- | ------------------------------------------------ | ---------------------------------------------------------- |
 | Create/list/read drawings         | `drawing create/list/get`                        | `create_drawing`, `list_available_drawings`, `get_drawing` |
+| Patch drawing records             | `update-drawing`                                 | `update_drawing`                                           |
+| Rename a drawing                  | `charter rename <target> <name>`                 | `rename_drawing`                                           |
 | Inspect/filter elements and files | `elements`, `cat`, `files`                       | `get_elements`, `get_external_files`                       |
 | Canvas/model images and exports   | `render`, `export`                               | `get_drawing_screenshot`, `export_asset`                   |
-| Python and SQL                    | `run-python`, `run-sql`                          | `run_python_code`, `run_sqlite`, `check_python_run_job`    |
+| Python and SQL                    | `run-python`, `run-sql`                          | `run_python_code`, `run_sqlite`                            |
+| Check sandbox jobs                | `check-job`                                      | `check_python_run_job`                                     |
 | Issue lifecycle                   | `issues list/create/update/close/reopen/dismiss` | `list_issues`, `create_issues`, `update_issue`             |
-| Charter inspection                | `charter get`                                    | `get_charter`                                              |
+| Charter inspection and status     | `charter get`                                    | `get_charter`, `update_charter_status`                     |
 
 For an inline rendered image, call `get_drawing_screenshot` with `viewport: { x, y, width, height }` in scene coordinates, or `elementId` plus `viewConfig` for model camera/display/clipping settings. Output `width`/`height` are pixels. No open client is required. `export_asset` supplies image/vector/CAD files as short-lived download URLs; it accepts the same viewport/view settings and STL `meshOptions`.
 
@@ -82,7 +85,7 @@ An effective agent workflow is:
 1. Resolve the drawing and inspect its current context.
 2. Retrieve only the records and external assets needed for the task.
 3. Perform a narrow calculation, query, or edit.
-4. Poll asynchronous Python or SQL work instead of submitting the same job again.
+4. Poll the job ID while its status is `queued`, `running`, or `applying`.
 5. Verify the result through the updated records, a drawing screenshot, or Model Open mode.
 6. Leave the automatic version delta as the recoverable boundary for the operation.
 
@@ -98,14 +101,16 @@ Model source declares one typed artifact with `emit_output(...)`. Its envelope i
 
 For an IfcOpenShell model, use `emit_output(ifc_model, kind="ifc")` to retain the IFC file and its IFC renderer. `show(ifc_model)` uses the default parametric capture and does not declare an IFC artifact.
 
-Drawing updates use **patch semantics**. The update should contain only records that were added or changed:
+Use `update_drawing` with `{ drawingId, patch }` when you already have complete DUC records. The `patch` object accepts `elements`, `layers`, `groups`, `regions`, `blocks`, `block_instances`, and `block_collections`. Submit related model records together so embedded code can validate against its drawing dependencies. Use `run_python_code` with the injected `update_drawing(patch)` helper when you need to build records programmatically or include binary assets.
+
+Send only the records that changed.
 
 * an existing ID updates the corresponding record;
 * a new ID adds a record;
 * omitted records remain unchanged; and
 * an element is deleted by updating its `is_deleted` field to `true`.
 
-It is therefore unnecessary—and undesirable—to fetch, rewrite, and submit the complete drawing for a localized change.
+The tool returns a `jobId`. A completed mutation has committed a versioned drawing update. Open editors synchronize the saved changes through the collaboration room and retain unrelated live edits. If an offline backup belongs to an older automation revision, Scopture keeps its edits in a local recovery copy. If the drawing changes after a worker reads it, inspect the current records before submitting a fresh update.
 
 SQLite jobs provide direct structured access to the `.duc` database through the supported Duc query layer. Use them for targeted inspection or mutation when the task is naturally relational. Use Python when the task requires calculations, geometry generation, external-file processing, or multi-step drawing logic.
 

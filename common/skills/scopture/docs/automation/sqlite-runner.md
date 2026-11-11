@@ -14,7 +14,7 @@ Send tool arguments like these to `run_sqlite`:
 {
   "drawingIds": ["drawing-a", "drawing-b"],
   "mode": "per-drawing",
-  "query": "SELECT id, type FROM {db}.elements WHERE type = ?",
+  "query": "SELECT id, element_type FROM {db}.elements WHERE element_type = ?",
   "parameters": ["model"],
   "maxRows": 100,
   "waitForCompletionMs": 0
@@ -43,7 +43,7 @@ Without custom aliases, the runner derives them from drawing IDs as `db_<drawing
 
 ## Apply a Change [#apply-a-change]
 
-`mutate` accepts exactly one drawing and requires edit access and execution permission. Use unqualified table names and bind values with `parameters`:
+`mutate` accepts exactly one drawing and requires edit access and execution permission. It supports data changes to drawing content. Use the dedicated tools for Issues and charter records. The transaction commits against the drawing revision read by the job. If that revision changes, inspect the latest drawing before retrying. Use unqualified table names and bind values with `parameters`.
 
 ```json
 {
@@ -68,7 +68,7 @@ Mutations are persisted through Scopture’s drawing update and versioning path.
 | Query size       | 100,000 characters                                          |
 | Bound parameters | At most 100 strings, numbers, booleans, or nulls            |
 
-A request creates one job. Server jobs wait in a durable queue with at most four concurrent workers. Jobs for the same user and organization run one at a time; additional requests do not start an unbounded number of Python processes. Large drawings and attached joins still consume more worker time and memory, so select the necessary fields and use result limits.
+A request creates one job. Server jobs wait in a durable queue with at most four concurrent workers. Each job can start as soon as a worker is available. Large drawings and attached joins still consume more worker time and memory, so select the necessary fields and use result limits.
 
 `waitForCompletionMs` defaults to `0`: submission returns a `jobId` promptly. Poll it with `check_python_run_job`, for example:
 
@@ -76,18 +76,18 @@ A request creates one job. Server jobs wait in a durable queue with at most four
 {"jobId": "returned-job-id", "waitForCompletionMs": 10000}
 ```
 
-Keep polling the same ID while its status is `queued`, `running`, or `applying`. A short HTTP wait is separate from the worker runtime; a pending job continues after the response. Do not resubmit a pending mutation. Each HTTP polling call waits at most 20 seconds, including the time already spent preparing that request, while a server worker can execute for up to 15 minutes. Jobs expire after 24 hours.
+Keep polling the same ID while its status is `queued`, `running`, or `applying`. A short HTTP wait is separate from the worker runtime; a pending job continues after the response. Do not resubmit a pending mutation. Each HTTP polling call waits at most 15 seconds, including the time already spent preparing that request, while a server worker can execute for up to 15 minutes. Jobs expire after 24 hours.
 
 If submission finishes during its requested wait, `run_sqlite.result` contains `columns`, `rows`, `rowCount`, `truncated`, and drawing aliases. Otherwise, the completed job’s stdout contains the same result after the `__SCOPTURE_RUN_SQLITE_RESULT__` marker. Failed jobs include an error; read-only SQL jobs can be polled with read access.
 
 ## CLI Examples [#cli-examples]
 
 ```bash
-scopture run-sql ./assembly.duc "SELECT id, type FROM elements" --raw
-scopture run-sql <drawing-id> "SELECT id, type FROM elements" --raw
+scopture run-sql ./assembly.duc "SELECT id, element_type FROM elements" --raw
+scopture run-sql <drawing-id> "SELECT id, element_type FROM elements" --raw
 scopture run-sql ./assembly.duc "UPDATE elements SET label = 'Mount' WHERE id = 'element-id'" --mutate
 ```
 
-Local files run on the device. Remote drawing IDs use the backend and the CLI polls the submitted job. Multi-drawing aliases, bound parameters, and row limits are exposed by MCP `run_sqlite`; consult `scopture run-sql --help` for the installed CLI’s options.
+Local files run directly in the CLI and need no Python setup, account, or connection. For remote IDs, the CLI runs the query locally by default and uses the backend to authorize the snapshot and commit writes. Add `--server` to use cloud compute. Local execution against a remote drawing accepts drawing-content edits. Use the dedicated workflows for external files, Issues, and charter records. Multi-drawing aliases, bound parameters, and row limits are exposed by MCP `run_sqlite`.
 
 See [MCP Tool](/docs/automation/mcp-tool), [CLI Tool](/docs/automation/cli-tool), and [Python Sandbox](/docs/automation/python-sandbox) for setup and the broader execution model.

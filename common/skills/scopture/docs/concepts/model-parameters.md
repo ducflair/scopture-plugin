@@ -71,6 +71,8 @@ When a shared value changes, Scopture marks dependent output as stale. With exec
 
 A current saved artifact can be displayed when a drawing reopens without executing its Python again. The declared output selects the viewer, so the same Model Element can produce CAD, DXF, an image, SVG, PDF, or a table. See [Model Elements](https://duc.ducflair.com/docs/concepts/elements/model-element) for `emit_output(...)` and the stored output contract.
 
+To emit a diagram, call `emit_output(get_svg_from_mermaid(source), kind="svg")`. See [Emit a Mermaid Diagram](/docs/automation/python-sandbox#emit-a-mermaid-diagram) for a complete example.
+
 Use the model import completion list in the Python editor to insert the stable module reference. The visible model label helps identify the source, while the element ID provides the durable reference used by the import.
 
 For the underlying module identity, import forms, remapping behavior, and dependency-graph contract, see [Model Element Modularization](https://duc.ducflair.com/docs/concepts/model-modularization) in the Duc documentation.
