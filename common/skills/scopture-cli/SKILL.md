@@ -18,6 +18,7 @@ The `scopture` CLI ships with the Scopture desktop app. It works on local `.duc`
 - **Read-only:** `ls`, `cat`, `elements`, `run-sql` (default read-only), `diff`, `files list`, `charter get`, `issues list`, `drawing get`, `auth status`, `ps`, `desktop status`.
 - **Mutates drawing state:**
   - `charter rename <target> <name>`: changes the stored drawing name (charter title) locally or remotely. For a local `.duc`, the disk filename stays the same; remote renames require drawing edit access.
+  - `update-drawing <drawing-id> <patch.json|->`: submits complete records as an incremental remote patch. Existing IDs replace records, new IDs add records, and omitted records remain. Use `--no-wait` to return the job ID immediately.
   - `run-python`: executes Python scripts in the sandbox. If `update_drawing(patch)` is called, modifies drawing elements and atomically re-compresses local `.duc` files or commits remote drawing changes.
   - `run-sql --mutate`: executes mutative SQL statements directly, persisting changes to local `.duc` files or remote drawings.
 - **Writes a file:** `render`, `export`, `files extract`. Direct output with `-o` to a scratch or outputs directory, never over the user's source drawing.
@@ -51,13 +52,13 @@ scopture run-sql model.duc "INSERT INTO layers (id, name, is_visible) VALUES ('l
 
 > [!NOTE]
 > On local `.duc` files, `--mutate` executes in read-write mode, flushes WAL, and atomically re-compresses the `.duc` file.
-> On remote drawings, `--mutate` commits the SQL transaction to the drawing. For remote read-only queries with multiple databases, see `duc` skill for the `{db}` placeholder.
+> On remote drawings, the CLI runs SQL locally and commits authorized writes through the drawing service. Add `--server` to use cloud compute. For remote read-only queries with multiple databases, see `duc` skill for the `{db}` placeholder.
 
 ## Drawing State & Element Mutation via Python (`run-python`)
 
 To create or update drawing state (elements, 2D geometry, parametric 3D models, layers, blocks, or global state), use `scopture run-python`.
 
-This command runs scripts in Scopture's **drawing-level Python runtime environment**, using the managed desktop sandbox when available, including for remote drawing IDs. Use `--server` to request cloud execution. Both workers derive from the shared sandbox project; authorization still applies. See [Python Sandbox](https://site.scopture.com/docs/automation/python-sandbox) for embedded methods, engineering capabilities, output kinds and network/process restrictions:
+This command runs scripts in Scopture's **drawing-level Python runtime environment**, starting its own worker from the managed local profile while the desktop app is closed. Local files work offline after setup. Remote drawing IDs still need a session and a connection. Add `--server` to `run-python` or `run-sql` to opt into cloud compute on a remote drawing. See [Python Sandbox](https://site.scopture.com/docs/automation/python-sandbox) for embedded methods, engineering capabilities, output kinds and network/process restrictions:
 
 ```bash
 # Execute inline Python script against the drawing
@@ -108,7 +109,7 @@ scopture issues list model.duc       # open/closed issues and reviewer threads
 ## Common workflows
 
 - **Find an element and show it:** `cat | grep` to locate it, take its ID, `elements get` to inspect it, `render --element` to see it, then view the PNG.
-- **Mutate elements or add parametric models:** Write a small Python script using `update_drawing(...)`, run `scopture run-python model.duc --file script.py`, then `render` to verify.
+- **Mutate elements or add parametric models:** Submit complete remote records with `update-drawing`. For scripted patches and local files, call `update_drawing(...)` inside `run-python`. If a job is pending, resume with `scopture check-job <job-id> --wait-ms 10000`. Render the completed change to verify.
 - **What changed between two versions:** `diff`, then summarize the added/removed/modified counts and call out the notable elements. Render both if the change is visual.
 - **Review briefing:** `charter get` + `issues list` + `diff` against the previous version.
 

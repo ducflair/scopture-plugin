@@ -65,7 +65,7 @@ The MCP tool registry and the Python sandbox expose different interfaces:
 
 ## Current `run_python_code` Sandbox
 
-Scopture currently exposes one remote execution contract for MCP Python jobs.
+Use the MCP `update_drawing` tool for complete JSON patch records. Use `run_python_code` when building geometry or files in code, then call the injected `update_drawing(patch)` helper. Both routes return a job ID.
 
 The sandbox mounts authorized inputs into a temporary workspace, captures standard output and model previews, and returns a job result. It does not infer a drawing mutation from variables or printed output. The script must explicitly submit a drawing update through the injected helper documented by `run_python_code`.
 
@@ -101,7 +101,7 @@ Preserve IDs, bindings, memberships, frame/layer relationships, and block-instan
 ## Drawing Target Resolution and Search
 
 1. **Resolve named targets first.** When the user says "in", "inside", or "from" a named drawing, call `list_available_drawings` before querying. Prefer an exact name match and use the resolved `drawingId`; do not assume the active drawing is the target or search all drawings indiscriminately. Ask which drawing if matches remain ambiguous. If no match exists, say the target was not found among available workspace drawings.
-2. **Choose the SQL mode and poll once-submitted jobs.** `run_sqlite` accepts up to 100 `drawingIds` in per-drawing mode, 10 distinct drawings in attached mode, and one drawing in mutate mode. Server jobs queue behind bounded workers; submit once and poll the returned `jobId` with `check_python_run_job`. A pending response is not a reason to resubmit.
+2. **Choose the SQL mode and poll once-submitted jobs.** `run_sqlite` accepts up to 100 `drawingIds` in per-drawing mode, 10 distinct drawings in attached mode, and one drawing in mutate mode. Server jobs queue behind bounded workers; submit once and poll the returned `jobId` with `check_python_run_job`. Keep polling that ID while queued, running, or applying. Mutation jobs commit in the background and sync to the open collaboration room. If the drawing revision changed during execution, inspect it before preparing a fresh mutation.
 3. **Conclude every search clearly.** Summarize the matches conversationally. For zero results, say: `Nothing found: No elements matching '<query>' were found in '<drawingName>'.`
 
 ## Issue and Charter Deletion
