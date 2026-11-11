@@ -14,8 +14,8 @@
     "full": "Scopture: Where physical engineering projects take shape before execution"
   },
   "description": {
-    "short": "Work on engineering projects",
-    "full": "Work directly with physical engineering projects in Scopture. Inspect models, drawings, canvas state, and .duc files while keeping the surrounding project context in view. Analyze project data, run Python, create simulations, develop CAD and BIM models, capture screenshots, manage issues and project charters, trace requirements and decisions, and apply changes directly to the work."
+    "short": "Work on engineering projects in Scopture with Microsoft 365 Copilot.",
+    "full": "Ask Copilot to list available cloud drawings, summarize drawing context and open issues, review project decisions, or make a requested update. Example prompt: “List the open issues in a Scopture drawing I can access.” In order to use this app, you need to have an active Scopture account and access to the relevant cloud drawing. This remote connector does not access local .duc files; use Scopture desktop or CLI for local files. Cloud Python execution requires an eligible paid plan in the drawing’s organization. Sign in or create an account (new accounts are created automatically on first sign-in): https://site.scopture.com/login. Get Scopture: https://site.scopture.com/download. Get started: https://site.scopture.com/docs. Help: https://site.scopture.com/support/faq. Contact support: https://site.scopture.com/support."
   },
   "icons": {
     "color": "color.png",
@@ -27,7 +27,7 @@
     {
       "id": "scopture-mcp",
       "displayName": "Scopture",
-      "description": "Work directly with physical engineering projects in Scopture. Inspect models, drawings, canvas state, and .duc files while keeping the surrounding project context in view. Analyze project data, run Python, create simulations, develop CAD personality, CAD and BIM models, capture screenshots, manage issues and project charters, trace requirements and decisions, and apply changes directly to the work.",
+      "description": "Use Scopture in Microsoft 365 Copilot to inspect accessible cloud drawings and project records, review issues and decisions, and make requested updates. Access is limited by your Scopture account and project permissions. Local .duc files and cloud Python execution have the requirements described in the app listing.",
       "toolSource": {
         "remoteMcpServer": {
           "mcpServerUrl": "https://api.scopture.com/mcp"

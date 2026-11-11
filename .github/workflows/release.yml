@@ -89,6 +89,7 @@ jobs:
         uses: ./.github/actions/package-release
         with:
           version: ${{ steps.release-plan.outputs.version }}
+          microsoft-oauth-reference-id: ${{ vars.MICROSOFT_OAUTH_REFERENCE_ID }}
 
       - name: Run semantic-release
         if: steps.release-plan.outputs.version != ''

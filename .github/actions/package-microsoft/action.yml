@@ -4,6 +4,9 @@ inputs:
   version:
     description: Semantic-release version to embed in the package manifest.
     required: true
+  oauth-reference-id:
+    description: Microsoft OAuth configuration reference ID created for Scopture.
+    required: true
   plugin-dir:
     description: Directory containing the Microsoft plugin manifest and package assets.
     required: false
@@ -28,12 +31,14 @@ runs:
       shell: bash
       env:
         RELEASE_VERSION: ${{ inputs.version }}
+        OAUTH_REFERENCE_ID: ${{ inputs.oauth-reference-id }}
         PLUGIN_DIR: ${{ inputs.plugin-dir }}
         SKILLS_DIR: ${{ inputs.skills-dir }}
         OUTPUT_DIR: ${{ inputs.output-dir }}
       run: |
         python3 providers/microsoft/package.py \
           --version "$RELEASE_VERSION" \
+          --oauth-reference-id "$OAUTH_REFERENCE_ID" \
           --plugin-dir "$PLUGIN_DIR" \
           --skills-dir "$SKILLS_DIR" \
           --out-dir "$OUTPUT_DIR"
