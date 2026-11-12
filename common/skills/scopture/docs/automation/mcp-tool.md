@@ -70,6 +70,8 @@ Remote CLI commands and MCP tools use the same validated backend operations and 
 
 For an inline rendered image, call `get_drawing_screenshot` with `viewport: { x, y, width, height }` in scene coordinates, or `elementId` plus `viewConfig` for model camera/display/clipping settings. Output `width`/`height` are pixels. No open client is required. `export_asset` supplies image/vector/CAD files as short-lived download URLs; it accepts the same viewport/view settings and STL `meshOptions`.
 
+Screenshots are read-only and do not flush editor changes. Both screenshot response modes return `available: false`, a reason, `retryAfterMs`, and the model execution ID when known while work is pending. Retry the same request after the suggested delay; it reuses model jobs and completed captures. `get_elements` includes `modelExecutions` so agents can inspect saved or live regeneration status without requesting full records.
+
 Download presigned URLs with HTTP **GET**. Their signatures authorize that method; a **HEAD** request can return 403 even when downloading with GET succeeds.
 
 MCP additionally exposes Issue messages, user lookup, charter changes, version inspection/recovery, server text search and live model-mode commands. Saved checkpoints and deltas can be restored without an open client, preserving current Issues and charter and recording a rollback version. The CLI has no dedicated commands for those operations. Structural comparison of local or remote drawings, OS file destinations, desktop focus, offline drawings and local sandbox execution remain CLI capabilities.

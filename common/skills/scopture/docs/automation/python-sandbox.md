@@ -26,6 +26,8 @@ A **drawing-level job**, invoked through the CLI or MCP, receives a drawing snap
 
 MCP `run_python_code` returns a `jobId`; `waitForCompletionMs` defaults to `0`. Submit once and poll that ID with `check_python_run_job` until it completes or fails. Each polling call waits at most 15 seconds, even when a longer wait is requested. Drawing updates commit in the background. Keep the same job ID while it is queued, running, or applying. The CLI polls automatically and prints the ID for `scopture check-job` if the job takes longer than its wait.
 
+Python patch jobs retain an immutable base and merge into the latest saved drawing after validation. Unrelated records and unchanged values, including regenerated output and dimensions, are preserved; overlapping edits report the affected record. SQL snapshot replacements still require the exact base revision. A known editor’s save failure blocks a drawing commit. If the collaboration service is unreachable, the commit uses the saved snapshot and conditional storage writes and returns a synchronization warning.
+
 Import installed libraries explicitly and declare model output:
 
 ```python
@@ -126,7 +128,7 @@ In this example the source Model Element must have the stable ID `geometry` and 
 
 ## Drawing Updates [#drawing-updates]
 
-Submit complete changed records to the MCP `update_drawing` tool or CLI `update-drawing` command when the patch is already JSON. For scripted changes, call the injected `update_drawing({"elements": [...]})` helper. The helper accepts a state dictionary, a compatible `ducpy` object, or valid `.duc` bytes. Dictionary and object inputs are serialized with embedded-code validation. Matching IDs update existing records, new IDs add records, and omitted records remain unchanged. Preserve existing IDs and memberships; do not submit the entire drawing merely to change one item. Inspect the result, then render it for visual QA.
+Submit complete changed records, including element revision fields, to the MCP `update_drawing` tool or CLI `update-drawing` command when the patch is already JSON. For scripted changes, call the injected `update_drawing({"elements": [...]})` helper. The helper accepts a state dictionary, a compatible `ducpy` object, or valid `.duc` bytes. Dictionary and object inputs pass structural validation before embedded code executes. Matching IDs update existing records, new IDs add records, and omitted records remain unchanged. Preserve existing IDs and memberships; do not submit the entire drawing merely to change one item. Inspect the result, then render it for visual QA.
 
 ## Capability mapping [#capability-mapping]
 
