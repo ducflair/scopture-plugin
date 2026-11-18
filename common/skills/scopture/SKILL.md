@@ -22,9 +22,9 @@ This skill focuses strictly on **live canvas synchronization**, using the **Scop
 Scopture provides a full Python runtime environment that operates against the **drawing as a whole**. It is **not bound or scoped to any individual element**.
 
 * **Whole-Drawing Operations**: The runtime is not limited to an isolated element or an embedded script container. Code executes with holistic visibility over the entire drawing, able to inspect elements, compute canvas-wide layouts, coordinate alignments, manage layers and groups, and orchestrate complex multi-element assemblies (e.g., schematics, floor plans, structural grids, or multi-view mechanical drawings).
-* **Engineering & Scientific Stack**: Use the maintained [Python Sandbox reference](https://site.scopture.com/docs/automation/python-sandbox) for the shared Python 3.12 capability map, output types and embedded helpers. Desktop prefers its managed sandbox even for remote drawings; browser/mobile require an authorized cloud worker. Installed packages do not bypass network/process guards or establish physical validation. Keep reusable geometry in one Model Element and import it into individual studies.
+* **Engineering & Scientific Stack**: Use the maintained [Python Sandbox reference](./docs/automation/python-sandbox) for the shared Python 3.12 capability map, output types and embedded helpers. Desktop prefers its managed sandbox even for remote drawings; browser/mobile require an authorized cloud worker. Installed packages do not bypass network/process guards or establish physical validation. Keep reusable geometry in one Model Element and import it into individual studies.
 * **Unified Batch Generation**: A single Python execution can generate, reposition, or update dozens of elements, create layers, instantiate blocks, and update global states in one unified patch.
-* **Execution Surfaces**: This drawing-level runtime environment can be invoked via the Scopture MCP server (`run_python_code`) against an active live canvas, or headlessly via the CLI (`scopture run-python`) against local or remote `.duc` drawings.
+* **Execution Surfaces**: This drawing-level runtime environment can be invoked via the Scopture MCP server (`run_python_code`) against an active live canvas, or headlessly via the CLI (`scopture run-python`) against local or remote `.duc` drawings. Both surfaces are safe dry runs by default and only modify drawing state if `update_drawing(patch)` is explicitly called; use them directly to test or dry-run code instead of setting up a local Python environment.
 
 ---
 
@@ -57,7 +57,7 @@ The MCP tool registry and the Python sandbox expose different interfaces:
 
 * **MCP `get_drawing` tool**: Returns drawing metadata, a state hash, and optional live `appState`. It does **not** return `.duc` bytes.
 * **MCP `get_elements` tool**: Returns compact element data and can filter by type, IDs, or bounding box. Prefer it when full drawing parsing is unnecessary.
-* **MCP `run_python_code` tool**: Submits a Python job. It is asynchronous by default; submit once and poll the returned `jobId` with `check_python_run_job`.
+* **MCP `run_python_code` tool**: Submits a Python job. It is asynchronous by default; submit once and poll the returned `jobId` with `check_python_run_job`. Do not switch mutation routes or resubmit a pending update.
 * **MCP `run_sqlite` tool**: Runs read or mutate SQL modes through the same asynchronous job flow.
 * **Python sandbox**: Runs submitted code in an isolated Python 3.12 environment with the active drawing, requested external files, model-output capture, and injected helper functions. Use the live `run_python_code` tool description for the MCP job contract.
 
@@ -154,5 +154,6 @@ Use the `scopture mcp` server to obtain active drawing context, inspect compact 
 - **Canvas appears unchanged**: Confirm the script explicitly submitted a drawing update, then poll the original job with `check_python_run_job` until the update is finalized.
 - **Duplicate mutations**: Never rerun a pending non-idempotent Python or SQLite job. Poll its original `jobId`.
 - **Attribute errors or invalid schemas**: Retrieve the current `llms.txt` route and verify the installed builder stage, method, parameter, and return type.
+- **Screenshot pending**: Retry the identical screenshot arguments after `retryAfterMs`. Capture IDs are separate from Python jobs; `check_python_run_job` cannot poll them. A terminal error without a retry hint needs investigation, not a new crop or source edit.
 - **Element Overlaps & Clipping**: Execute the Visual QA verification loop (`get_drawing_screenshot`) and adjust bounding box offsets or coordinates accordingly.
 - **Invisible 2D CAD Elements**: Elements missing on the canvas might lack a default fill or stroke. Always assign explicit styles (backgrounds and strokes) when generating 2D CAD. See [Styling Elements](https://duc.ducflair.com/docs/guidelines/styling-elements).

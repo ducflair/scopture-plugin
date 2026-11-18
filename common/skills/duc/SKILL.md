@@ -26,6 +26,10 @@ Agents must adhere strictly to this priority order:
 > Runtime introspection remains #1 because the installed package version might differ.
 > **Rule**: *Never invent a `ducpy` method, parameter, return type, schema column, or builder stage. Retrieve the version-matched reference from the local docs or runtime introspection before generating implementation code.*
 
+> [!TIP]
+> **Runtime Environment for Testing & Introspection**
+> Use `scopture run-python <file.duc>` via the CLI (or `run_python_code` via MCP) to test or dry-run code and introspect `ducpy` against a real drawing. It has the full engineering stack pre-installed and is read-only unless `update_drawing(...)` is called. Don't set up a local Python environment.
+
 ---
 
 ## Key Design & Code Standards
@@ -42,7 +46,7 @@ Agents must adhere strictly to this priority order:
 
 ## Additional Adapter References
 
-For Scopture execution, consult [Python Sandbox](https://site.scopture.com/docs/automation/python-sandbox). `emit_output`, drawing snapshot/patch helpers and `duc_model` imports belong to that host runtime, not standalone `ducpy`.
+For Scopture execution, consult [Python Sandbox](../scopture/docs/automation/python-sandbox.md). `emit_output`, drawing snapshot/patch helpers and `duc_model` imports belong to that host runtime, not standalone `ducpy`.
 
 The general DUC and `ducpy` routes above remain the primary sources. Use these versioned adapter references when a task targets another DUC interface:
 
