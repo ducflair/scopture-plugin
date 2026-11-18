@@ -1,6 +1,6 @@
 ---
 name: scopture-cli
-description: "Inspect, query, test, mutate, diff, render, and export Scopture/DUC (`.duc`) drawings from the terminal with the `scopture` CLI. Use whenever the user has a local `.duc` file or remote drawing and wants to see what's in it, find or filter elements, run read-only or mutative SQL, test or dry-run Python code or mutate drawing state/elements via the Python sandbox, compare two versions, render a preview image, extract embedded STEP/IFC files, export to STEP/DXF, review a drawing's charter or issues, or open it in the desktop app, even if they never mention the CLI. For understanding Scopture canvas standards specifically use the `scopture` skill; for writing `ducpy` code or adjacent logic to the `.duc` use the `duc` skill."
+description: "Inspect, query, test, mutate, diff, render, and export Scopture/DUC (`.duc`) drawings from the terminal with the `scopture` CLI. Use whenever the user has a local `.duc` file or remote drawing and wants to see what's in it, find or filter elements, run read-only or mutative SQL, test Python code or mutate drawing state/elements via the Python sandbox, compare two versions, render a preview image, extract embedded STEP/IFC files, export to STEP/DXF, review a drawing's charter or issues, or open it in the desktop app, even if they never mention the CLI. For understanding Scopture canvas standards specifically use the `scopture` skill; for writing `ducpy` code or adjacent logic to the `.duc` use the `duc` skill."
 ---
 
 # Scopture CLI
@@ -15,11 +15,11 @@ The `scopture` CLI ships with the Scopture desktop app. It works on local `.duc`
 
 ## Side effects
 
-- **Read-only:** `ls`, `cat`, `elements`, `run-sql` (default read-only), `run-python` (read-only by default; safe dry run unless `update_drawing(...)` is called), `diff`, `files list`, `charter get`, `issues list`, `drawing get`, `auth status`, `ps`, `desktop status`.
+- **Read-only:** `ls`, `cat`, `elements`, `run-sql` (default read-only), `run-python` (read-only by default; only mutates if `update_drawing(...)` is called), `diff`, `files list`, `charter get`, `issues list`, `drawing get`, `auth status`, `ps`, `desktop status`.
 - **Mutates drawing state:**
   - `charter rename <target> <name>`: changes the stored drawing name (charter title) locally or remotely. For a local `.duc`, the disk filename stays the same; remote renames require drawing edit access.
   - `update-drawing <drawing-id> <patch.json|->`: submits complete records as an incremental remote patch. Existing IDs replace records, new IDs add records, and omitted records remain. Use `--no-wait` to return the job ID immediately.
-  - `run-python` (only when `update_drawing(patch)` is called): modifies drawing elements and atomically re-compresses local `.duc` files or commits remote drawing changes. Without calling `update_drawing(...)`, it is completely read-only and safe for testing or dry-running code.
+  - `run-python` (only when `update_drawing(patch)` is called): modifies drawing elements and atomically re-compresses local `.duc` files or commits remote drawing changes. Without calling `update_drawing(...)`, it is completely read-only and safe for testing scripts.
   - `run-sql --mutate`: executes mutative SQL statements directly, persisting changes to local `.duc` files or remote drawings.
 - **Writes a file:** `render`, `export`, `files extract`. Direct output with `-o` to a scratch or outputs directory, never over the user's source drawing.
 - **Changes the user's screen:** `scopture <file>`, `open`, `desktop focus`. Run these only when the user asks to open or show something. For inspection and background scripts, use the headless commands.
@@ -54,16 +54,16 @@ scopture run-sql model.duc "INSERT INTO layers (id, name, is_visible) VALUES ('l
 > On local `.duc` files, `--mutate` executes in read-write mode, flushes WAL, and atomically re-compresses the `.duc` file.
 > On remote drawings, the CLI runs SQL locally and commits authorized writes through the drawing service. Add `--server` to use cloud compute. For remote read-only queries with multiple databases, see `duc` skill for the `{db}` placeholder.
 
-## Python Sandbox: Testing, Dry Runs & State Mutation (`run-python`)
+## Python Sandbox: Testing & State Mutation (`run-python`)
 
-Use `run-python` to test or dry-run code; it has the full engineering stack. Don't set up a local Python environment.
+Use `run-python` to test code; it has the full engineering stack. Don't set up a local Python environment.
 
-`run-python` is a **safe, read-only run by default**. It only modifies the drawing if the script explicitly calls `update_drawing(patch)`. Use it to test logic, inspect elements, run calculations, or create/update drawing state (elements, 2D geometry, parametric 3D models, layers, blocks, or global state).
+`run-python` is **read-only by default**. It only modifies the drawing if the script explicitly calls `update_drawing(patch)`. Use it to test logic, inspect elements, run calculations, or create/update drawing state (elements, 2D geometry, parametric 3D models, layers, blocks, or global state).
 
-This command runs scripts in Scopture's **drawing-level Python runtime environment**, starting its own worker from the managed local profile while the desktop app is closed. Local files work offline after setup. Remote drawing IDs still need a session and a connection. Add `--server` to `run-python` or `run-sql` to opt into cloud compute on a remote drawing. See [Python Sandbox](../scopture//docs/automation/python-sandbox) for embedded methods, engineering capabilities, output kinds and network/process restrictions:
+This command runs scripts in Scopture's **drawing-level Python runtime environment**, starting its own worker from the managed local profile while the desktop app is closed. Local files work offline after setup. Remote drawing IDs still need a session and a connection. Add `--server` to `run-python` or `run-sql` to opt into cloud compute on a remote drawing. See [Python Sandbox](../scopture/docs/automation/python-sandbox.md) for embedded methods, engineering capabilities, output kinds and network/process restrictions:
 
 ```bash
-# Dry-run / test code or inspect elements safely (read-only, no drawing changes)
+# Test code or inspect elements safely (read-only, does not alter the drawing)
 scopture run-python model.duc "from ducpy import ElementsClass; print('Testing logic against drawing...')"
 scopture run-python model.duc --file ./test_calculations.py
 scopture run-python model.duc --file ./inspect_model.py --json
@@ -87,6 +87,7 @@ cat mutate.py | scopture run-python model.duc -
 scopture diff baseline.duc modified.duc       # + added, - removed, ~ modified
 scopture render model.duc -o preview.png
 scopture render model.duc -o element.png --element <element-id> --width 1920 --height 1080
+scopture render model.duc --element <model-id> --view-config ./view.json -o section.png   # section cut via clipping planes (without modifying model)
 scopture export model.duc --format step -o ./part.step   # also: --format dxf
 scopture files list model.duc
 scopture files extract model.duc <file-id> -o ./extracted_part.step
@@ -114,6 +115,7 @@ scopture issues list model.duc       # open/closed issues and reviewer threads
 ## Common workflows
 
 - **Test or run Python code:** Run `scopture run-python model.duc --file script.py` (or inline). Use `run-python` directly instead of creating a local virtual environment or installing packages—it has the full engineering stack (`ezdxf`, `matplotlib`, `ducpy`, `build123d`, etc.) and is read-only unless `update_drawing(...)` is called.
+- **Section views & cutaways:** Never modify CAD geometry with boolean cuts for section views. Instead, pass `--view-config` with clipping planes to `scopture render` (or configure `viewerState` on the model element) to render dynamic cross-sections non-destructively. See the **`duc`** skill for design standards.
 - **Find an element and show it:** `cat | grep` to locate it, take its ID, `elements get` to inspect it, `render --element` to see it, then view the PNG.
 - **Mutate elements or add parametric models:** Submit complete remote records with `update-drawing`. For scripted patches and local files, call `update_drawing(...)` inside `run-python`. The open desktop drawing reconciles edits to its local file. If a job is pending, resume with `scopture check-job <job-id> --wait-ms 10000`; do not resubmit or switch to SQL. Render the completed change to verify.
 - **What changed between two versions:** `diff`, then summarize the added/removed/modified counts and call out the notable elements. Render both if the change is visual.

@@ -28,7 +28,7 @@ Agents must adhere strictly to this priority order:
 
 > [!TIP]
 > **Runtime Environment for Testing & Introspection**
-> Use `scopture run-python <file.duc>` via the CLI (or `run_python_code` via MCP) to test or dry-run code and introspect `ducpy` against a real drawing. It has the full engineering stack pre-installed and is read-only unless `update_drawing(...)` is called. Don't set up a local Python environment.
+> Use `scopture run-python <file.duc>` via the CLI (or `run_python_code` via MCP) to test code and introspect `ducpy` against a real drawing. It has the full engineering stack pre-installed and is read-only unless `update_drawing(...)` is called. Don't set up a local Python environment.
 
 ---
 
@@ -39,6 +39,12 @@ Agents must adhere strictly to this priority order:
 * **In-Place Mutation**: Use `duc.mutate_element()` for builder-created `ElementWrapper` or dataclass objects. Parsed `DucData` elements are dictionaries and should be edited through their existing fields. Never destroy and recreate an element merely to update it, because doing so can lose IDs, memberships, bindings, and other relationships.
 * **Binding Preservation**: Preserve existing element IDs, `bound_elements`, group/region/block memberships, `frame_id`, `layer_id`, and instance relationships during edits.
 * **Strict Builder Methods**: Methods are stage-specific. Confirm the active builder class and installed-version signature before invocation.
+* **Modular Model Elements (Components & Assemblies)**: When creating complex 3D models or assemblies, do not write a single monolithic script. Break the design into modular Model Elements:
+  - **Parameters**: Elements defining dimensions, configuration values, or domain rules.
+  - **Component Geometry**: Elements providing reusable geometric parts or helper functions without calling `emit_output(...)`.
+  - **Assembly Root**: A top-level Model Element that imports components using `from duc_model.<element_id> import ...`, combines them into an assembly, and calls `emit_output(..., kind="parametric")` once.
+  Refer to [Model Modularization](./docs/concepts/model-modularization.md) for dependency graphs, patterns, and `duc_model` import conventions.
+* **Section Views via `viewerState` (Non-Destructive Clipping)**: Never perform boolean subtraction cuts on 3D CAD models (e.g. subtracting a cutting block in code) just to generate a section view or cutaway. Instead, configure the view state: set `viewer_state.clipping` (or `with_viewer_state(...)` with active X, Y, or Z clipping planes) on the Model Element. The 3D viewer renders the dynamic cross-section cut while keeping the underlying CAD model geometry complete, intact, and ready for fabrication or export. Refer to [Model Element](./docs/concepts/elements/model-element.md).
 * **Styling Elements (Default Fill & Stroke)**: When generating 2D CAD elements, always explicitly define styles with a default fill (background) or stroke; do not assume they are applied automatically. Refer to [Styling Elements](https://duc.ducflair.com/docs/guidelines/styling-elements) for constructing ordered `backgrounds` and `strokes` arrays using `duc.create_simple_styles`.
 * **No Duplicated API Reference**: Do not add volatile builder examples, serialization snippets, or schema catalogs to this skill. Improve the corresponding Duc documentation instead so `llms.txt` remains the maintained source.
 
