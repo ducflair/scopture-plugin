@@ -937,21 +937,24 @@ erDiagram
     duc_global_state {
         int id PK
         text view_background_color
+        int lock_background_color
     }
 ```
 
 ### Columns
 
-| Column | Type | Nullable | PK | FK |
-| --- | --- | --- | --- | --- |
-| id | INTEGER | ✓ | ✓ |  |
-| view_background_color | TEXT |  |  |  |
+| Column | Type | Nullable | PK | FK | Default |
+| --- | --- | --- | --- | --- | --- |
+| id | INTEGER | ✓ | ✓ |  |  |
+| view_background_color | TEXT |  |  |  |  |
+| lock_background_color | INTEGER |  |  |  | 0 |
 
 ### Check constraints
 
 | Constraint | Clause |
 | --- | --- |
 |  | id = 1 |
+|  | lock_background_color IN (0, 1) |
 
 ## duc_issue_anchors
 

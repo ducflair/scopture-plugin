@@ -68,7 +68,7 @@ Remote CLI commands and MCP tools use the same validated backend operations and 
 | Issue lifecycle                   | `issues list/create/update/close/reopen/dismiss` | `list_issues`, `create_issues`, `update_issue`             |
 | Charter inspection and status     | `charter get`                                    | `get_charter`, `update_charter_status`                     |
 
-For an inline rendered image, call `get_drawing_screenshot` with `viewport: { x, y, width, height }` in scene coordinates, or `elementId` plus `viewConfig` for model camera/display/clipping settings. Output `width`/`height` are pixels. No open client is required. `export_asset` supplies image/vector/CAD files as short-lived download URLs; it accepts the same viewport/view settings and STL `meshOptions`.
+To render a drawing, call `get_drawing_screenshot` with `viewport: { x, y, width, height }` in scene coordinates, or `elementId` plus `viewConfig` for model camera/display/clipping settings. Output `width`/`height` are pixels. No open client is required. Small images are inline by default; large screenshots return a signed download URL. Set `responseMode: "presigned-url"` to always request a link. `export_asset` supplies image/vector/CAD files as short-lived download URLs; it accepts the same viewport/view settings and STL `meshOptions`.
 
 Screenshots are read-only and do not flush editor changes. Both screenshot response modes return `available: false`, a reason, `retryAfterMs`, and the model execution ID when known while work is pending. Retry the same request after the suggested delay; it reuses model jobs and completed captures. `get_elements` includes `modelExecutions` so agents can inspect saved or live regeneration status without requesting full records.
 

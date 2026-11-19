@@ -26,7 +26,13 @@ A **drawing-level job**, invoked through the CLI or MCP, receives a drawing snap
 
 MCP `run_python_code` returns a `jobId`; `waitForCompletionMs` defaults to `0`. Submit once and poll that ID with `check_python_run_job` until it completes or fails. Each polling call waits at most 15 seconds, even when a longer wait is requested. Drawing updates commit in the background. Keep the same job ID while it is queued, running, or applying. The CLI polls automatically and prints the ID for `scopture check-job` if the job takes longer than its wait.
 
-Python patch jobs retain an immutable base and merge into the latest saved drawing after validation. Unrelated records and unchanged values, including regenerated output and dimensions, are preserved; overlapping edits report the affected record. SQL snapshot replacements still require the exact base revision. A known editor’s save failure blocks a drawing commit. If the collaboration service is unreachable, the commit uses the saved snapshot and conditional storage writes and returns a synchronization warning.
+Completed results include diagnostic `timingsMs` for worker initialization, execution and output collection. Cloud results also separate queue wait, input downloads and total worker-process time; these phases overlap and should not be summed. The `python-job-timing` CloudWatch entry additionally records result publication and whether this was the environment’s first job.
+
+Python patches and SQL edits to drawing content merge from the job’s immutable base into the latest saved drawing. Unrelated edits are preserved, and a conflicting saved edit reports the affected field. On success, open editors receive the update through the collaboration room and merge it with their current canvas. If the room is unreachable, the job returns a synchronization warning after saving the change.
+
+Cloud workers allow up to 870 seconds for execution and validation together, followed by a short termination grace period. Validate changed models in small patches; source validation runs model code. Python libraries and drawing-local modules reuse the worker during patch validation. Running jobs publish their output at completion; stdout event timestamps describe the time of each output segment.
+
+Typst Doc sources can reference existing drawing assets as `/scopture-files/<fileId>/<source_name>` (or the relative equivalent). Assets already in the drawing need not be uploaded again. The sandbox retains the source and attaches its compiled PDF for headless rendering. New inline file content receives a content-based revision ID.
 
 Import installed libraries explicitly and declare model output:
 
