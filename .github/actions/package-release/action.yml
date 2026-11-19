@@ -5,8 +5,8 @@ inputs:
     description: Semantic-release version to embed in every package.
     required: true
   microsoft-oauth-reference-id:
-    description: Microsoft OAuth configuration reference ID created for Scopture.
-    required: true
+    description: Microsoft OAuth configuration reference ID created for Scopture. The Microsoft archive is omitted if unavailable.
+    required: false
   staging-dir:
     description: Temporary directory for the shared versioned skills.
     required: false
@@ -46,24 +46,68 @@ runs:
           --staging-dir "$STAGING_DIR" \
           --out-dir "$OUTPUT_DIR"
     - id: package-openai
-      uses: $/.github/actions/package-openai
+      uses: ./.github/actions/package-openai
+      continue-on-error: true
       with:
         version: ${{ inputs.version }}
         skills-dir: ${{ inputs.staging-dir }}
         output-dir: ${{ inputs.output-dir }}
     - id: package-claude
-      uses: $/.github/actions/package-claude
+      uses: ./.github/actions/package-claude
+      continue-on-error: true
       with:
         version: ${{ inputs.version }}
         skills-dir: ${{ inputs.staging-dir }}
         output-dir: ${{ inputs.output-dir }}
     - id: package-microsoft
-      uses: $/.github/actions/package-microsoft
+      uses: ./.github/actions/package-microsoft
+      continue-on-error: true
       with:
         version: ${{ inputs.version }}
         oauth-reference-id: ${{ inputs.microsoft-oauth-reference-id }}
         skills-dir: ${{ inputs.staging-dir }}
         output-dir: ${{ inputs.output-dir }}
+    - name: Remove incomplete provider packages
+      if: always()
+      shell: bash
+      env:
+        RELEASE_VERSION: ${{ inputs.version }}
+        OUTPUT_DIR: ${{ inputs.output-dir }}
+        OPENAI_OUTCOME: ${{ steps.package-openai.outcome }}
+        CLAUDE_OUTCOME: ${{ steps.package-claude.outcome }}
+        MICROSOFT_OUTCOME: ${{ steps.package-microsoft.outcome }}
+      run: |
+        version="${RELEASE_VERSION#v}"
+        if [[ "$OPENAI_OUTCOME" == failure ]]; then
+          rm -f -- "$OUTPUT_DIR/openai-scopture-plugin-$version.zip"
+        fi
+        if [[ "$CLAUDE_OUTCOME" == failure ]]; then
+          rm -f -- "$OUTPUT_DIR/claude-scopture-plugin-$version.zip"
+        fi
+        if [[ "$MICROSOFT_OUTCOME" == failure ]]; then
+          rm -f -- "$OUTPUT_DIR/microsoft-scopture-plugin-$version.zip"
+        fi
+    - name: Report provider package results
+      if: always()
+      shell: bash
+      env:
+        OPENAI_OUTCOME: ${{ steps.package-openai.outcome }}
+        CLAUDE_OUTCOME: ${{ steps.package-claude.outcome }}
+        MICROSOFT_OUTCOME: ${{ steps.package-microsoft.outcome }}
+      run: |
+        {
+          echo "### Provider package results"
+          echo
+          echo "| Provider | Outcome |"
+          echo "| --- | --- |"
+          echo "| OpenAI | $OPENAI_OUTCOME |"
+          echo "| Claude | $CLAUDE_OUTCOME |"
+          echo "| Microsoft | $MICROSOFT_OUTCOME |"
+        } >> "$GITHUB_STEP_SUMMARY"
+
+        [[ "$OPENAI_OUTCOME" != failure ]] || echo "::warning title=OpenAI package failed::OpenAI ZIP omitted from this release."
+        [[ "$CLAUDE_OUTCOME" != failure ]] || echo "::warning title=Claude package failed::Claude ZIP omitted from this release."
+        [[ "$MICROSOFT_OUTCOME" != failure ]] || echo "::warning title=Microsoft package failed::Microsoft ZIP omitted from this release."
     - id: testing-guide
       name: Generate versioned offer testing guide
       shell: bash

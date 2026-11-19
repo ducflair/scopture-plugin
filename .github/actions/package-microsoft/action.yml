@@ -6,7 +6,7 @@ inputs:
     required: true
   oauth-reference-id:
     description: Microsoft OAuth configuration reference ID created for Scopture.
-    required: true
+    required: false
   plugin-dir:
     description: Directory containing the Microsoft plugin manifest and package assets.
     required: false
