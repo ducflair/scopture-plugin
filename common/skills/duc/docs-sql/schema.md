@@ -701,6 +701,12 @@ erDiagram
 |  | id = 1 |
 |  | phase IN (&#39;intent&#39;, &#39;review&#39;, &#39;delivery&#39;, &#39;closed&#39;) |
 
+### Triggers
+
+| Trigger | Timing | Events | Definition |
+| --- | --- | --- | --- |
+| duc_charter_record_phase | AFTER | UPDATE | CREATE TRIGGER duc_charter_record_phase AFTER UPDATE OF phase ON duc_charter WHEN OLD.phase &lt;&gt; NEW.phase BEGIN     INSERT INTO duc_charter_phase_history (id, previous_phase, phase, changed_at, closed_reason, sort_order)     SELECT lower(hex(randomblob(16))), OLD.phase, NEW.phase, CASE WHEN NEW.updated_at &lt;&gt; OLD.updated_at AND NEW.updated_at &gt; 0 THEN NEW.updated_at ELSE CAST(unixepoch(&#39;subsec&#39;) * 1000 AS INTEGER) END,            CASE WHEN NEW.phase = &#39;closed&#39; THEN NEW.closed_reason END, coalesce(max(sort_order), -1) + 1     FROM duc_charter_phase_history; END |
+
 ## duc_charter_constraints
 
 *table · 0 rows*
@@ -803,6 +809,54 @@ erDiagram
 | Index | Columns | Unique | Primary | Type |
 | --- | --- | --- | --- | --- |
 | sqlite_autoindex_duc_charter_decisions_1 | id | ✓ | ✓ |  |
+
+## duc_charter_phase_history
+
+*table · 0 rows*
+
+```mermaid
+erDiagram
+    duc_charter_phase_history {
+        text id PK
+        text previous_phase
+        text phase
+        int changed_at
+        text closed_reason
+        int sort_order
+    }
+```
+
+### Columns
+
+| Column | Type | Nullable | PK | FK |
+| --- | --- | --- | --- | --- |
+| id | TEXT | ✓ | ✓ |  |
+| previous_phase | TEXT |  |  |  |
+| phase | TEXT |  |  |  |
+| changed_at | INTEGER |  |  |  |
+| closed_reason | TEXT | ✓ |  |  |
+| sort_order | INTEGER |  |  |  |
+
+### Unique constraints
+
+| Constraint | Columns |
+| --- | --- |
+| sqlite_autoindex_duc_charter_phase_history_2 | sort_order |
+
+### Indexes
+
+| Index | Columns | Unique | Primary | Type |
+| --- | --- | --- | --- | --- |
+| sqlite_autoindex_duc_charter_phase_history_1 | id | ✓ | ✓ |  |
+| sqlite_autoindex_duc_charter_phase_history_2 | sort_order | ✓ |  |  |
+
+### Check constraints
+
+| Constraint | Clause |
+| --- | --- |
+|  | previous_phase IN (&#39;intent&#39;, &#39;review&#39;, &#39;delivery&#39;, &#39;closed&#39;) |
+|  | phase IN (&#39;intent&#39;, &#39;review&#39;, &#39;delivery&#39;, &#39;closed&#39;) AND phase &lt;&gt; previous_phase |
+|  | phase &lt;&gt; &#39;closed&#39; OR length(trim(coalesce(closed_reason, &#39;&#39;))) &gt; 0 |
 
 ## duc_charter_requirement_acceptance_criteria
 

@@ -74,15 +74,17 @@ The selected TTF must be mounted for the job; declaring a name does not install 
 
 ## Output Contract [#output-contract]
 
-| `kind`       | Viewer/output                                             |
-| ------------ | --------------------------------------------------------- |
-| `parametric` | Supported B-Rep/mesh objects or a tessellated CAD preview |
-| `ifc`        | IFC model                                                 |
-| `dxf`        | DXF drawing                                               |
-| `image`      | Raster image bytes or a workspace image path              |
-| `svg`        | SVG markup/bytes or a workspace SVG path                  |
-| `pdf`        | PDF bytes or a workspace PDF path                         |
-| `table`      | Structured table data                                     |
+| `kind`       | Viewer/output                                                  |
+| ------------ | -------------------------------------------------------------- |
+| `parametric` | Supported B-Rep/mesh objects or a tessellated CAD preview      |
+| `ifc`        | IFC model                                                      |
+| `dxf`        | DXF drawing                                                    |
+| `dwg`        | DWG bytes or a workspace DWG path                              |
+| `image`      | Raster image bytes or a workspace image path                   |
+| `svg`        | SVG markup/bytes or a workspace SVG path                       |
+| `pdf`        | PDF bytes or a workspace PDF path                              |
+| `table`      | Structured table data                                          |
+| `xlsx`       | Workbook bytes, an openpyxl Workbook, or a workspace XLSX path |
 
 A logic-only parameter/helper module needs no output. Imported dependencies’ `show(...)` and `emit_output(...)` calls do not replace the root output. HTML and video are not Model Element output kinds; keep them as explicit file assets where appropriate. See the [Model Element output contract](https://duc.ducflair.com/docs/concepts/elements/model-element) for supported values and envelope details.
 
@@ -143,6 +145,7 @@ Submit complete changed records, including element revision fields, to the MCP `
 | CAD solids / STEP                        | Parametric geometry, B-Rep, STEP import/export                                | `build123d, cadquery-ocp`                         |
 | BIM / IFC                                | Building objects and properties                                               | `ifcopenshell`                                    |
 | 2D CAD / DXF                             | Layers, blocks, entities and drawings                                         | `ezdxf`                                           |
+| Spreadsheets                             | Create and edit XLSX files, evaluate and verify formulas                      | `openpyxl`, `ironcalc`                            |
 | Mesh generation                          | Surface/volume mesh, B-Rep meshing, physical groups                           | `netgen-mesher` / `gmsh`                          |
 | Mesh conversion                          | FEM/CFD format and field exchange                                             | `meshio`                                          |
 | Geometry QA                              | Watertightness, 3D manifold booleans, topology, intersections                 | `trimesh, manifold3d, shapely, rtree`             |

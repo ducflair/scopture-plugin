@@ -79,7 +79,7 @@ The sandbox mounts authorized inputs into a temporary workspace, captures standa
 
 ### Engineering Python Stack
 
-For complex calculations, physical simulations, and engineering problem solving, the sandbox includes `numpy`, `scipy`, `sympy`, `pint`, `pandas`, `matplotlib`, and `fluids`. Use them for numerical methods, symbolic derivation, unit-aware calculations, data analysis, simulation contours, plotting, and fluid-system calculations, then translate the results directly into DUC elements, `build123d`/`ifcopenshell`/`ezdxf` geometry, or multi-modal visual artifacts.
+For complex calculations, physical simulations, and engineering problem solving, the sandbox includes `numpy`, `scipy`, `sympy`, `pint`, `pandas`, `matplotlib`, and `fluids`. Turn results into drawing elements or model artifacts. For spreadsheets, use `openpyxl` to build a workbook and `ironcalc` to verify formulas. Emit XLSX from the rendering root with `emit_output(workbook, kind="xlsx")`, or add an existing workbook as a Table element. See [Python Sandbox](docs/automation/python-sandbox.md) for the output contract.
 
 ---
 
@@ -125,6 +125,8 @@ Combine parameters with `&` when needed, for example `/w/<drawingId>?element=<el
 ---
 
 ## Visual QA and Verification Loop
+
+For presentations and custom PDF layouts, create one plot per slide or sheet. Position the content inside each plot at the intended page dimensions. Plot-mode PDF export produces one page per plot, so verify the page sequence and bounds in the exported PDF.
 
 Approach drawings with a critical eye. Do not declare success before the asynchronous update has been applied and the visible result has been inspected when a live client is available.
 

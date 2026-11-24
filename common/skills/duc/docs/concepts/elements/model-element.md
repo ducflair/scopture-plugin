@@ -38,14 +38,14 @@ emit_output(
 )
 ```
 
-| Argument    | Meaning                                                                            |
-| ----------- | ---------------------------------------------------------------------------------- |
-| `kind`      | Required: `parametric`, `ifc`, `dxf`, `image`, `svg`, `pdf`, or `table`            |
-| `value`     | A supported geometry object, IFC file, DXF drawing, text, bytes, or table records  |
-| `data`      | Explicit payload bytes or text, instead of converting `value`                      |
-| `path`      | A generated file inside the execution workspace; relative paths use that workspace |
-| `mime_type` | MIME type override, such as `image/png`                                            |
-| `filename`  | Display or export name for the artifact                                            |
+| Argument    | Meaning                                                                                |
+| ----------- | -------------------------------------------------------------------------------------- |
+| `kind`      | Required: `parametric`, `ifc`, `dxf`, `dwg`, `image`, `svg`, `pdf`, `xlsx`, or `table` |
+| `value`     | A supported geometry object, IFC file, DXF drawing, text, bytes, or table records      |
+| `data`      | Explicit payload bytes or text, instead of converting `value`                          |
+| `path`      | A generated file inside the execution workspace; relative paths use that workspace     |
+| `mime_type` | MIME type override, such as `image/png`                                                |
+| `filename`  | Display or export name for the artifact                                                |
 
 Use the input form appropriate to the kind. The file passed through `path` must exist when execution completes and must resolve inside the workspace. An empty artifact, an unsupported kind, a second declaration, or a file outside that workspace fails generation.
 
@@ -53,15 +53,17 @@ The API is supplied by a compatible execution host, including the `ducpy` tessel
 
 ## Output Kinds [#output-kinds]
 
-| Kind and renderer | Artifact                                                                                | Viewer                   |
-| ----------------- | --------------------------------------------------------------------------------------- | ------------------------ |
-| `parametric`      | JSON tessellation payload, `application/json`                                           | Interactive CAD 3D       |
-| `ifc`             | IFC bytes, `application/x-ifc`, plus a separate JSON preview when geometry is available | IFC 3D                   |
-| `dxf`             | DXF bytes, `application/dxf`                                                            | DXF 2D                   |
-| `image`           | Image bytes, default `image/png`                                                        | Image                    |
-| `svg`             | SVG text or bytes, `image/svg+xml`                                                      | SVG                      |
-| `pdf`             | PDF bytes, `application/pdf`                                                            | PDF with page navigation |
-| `table`           | JSON records or columns and rows, `application/json`                                    | Table                    |
+| Kind and renderer | Artifact                                                                                | Viewer                       |
+| ----------------- | --------------------------------------------------------------------------------------- | ---------------------------- |
+| `parametric`      | JSON tessellation payload, `application/json`                                           | Interactive CAD 3D           |
+| `ifc`             | IFC bytes, `application/x-ifc`, plus a separate JSON preview when geometry is available | IFC 3D                       |
+| `dxf`             | DXF bytes, `application/dxf`                                                            | Inline PDF spaces and layers |
+| `dwg`             | DWG bytes or a workspace file                                                           | Inline PDF spaces and layers |
+| `image`           | Image bytes, default `image/png`                                                        | Inline image                 |
+| `svg`             | SVG text or bytes, `image/svg+xml`                                                      | Inline vector artwork        |
+| `pdf`             | PDF bytes, `application/pdf`                                                            | Inline PDF pages             |
+| `xlsx`            | XLSX bytes, openpyxl Workbook, or a workspace file                                      | Inline workbook sheets       |
+| `table`           | JSON records or columns and rows, `application/json`                                    | Table                        |
 
 ### Build123d Output Contract [#build123d-output-contract]
 

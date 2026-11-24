@@ -24,6 +24,7 @@
 - [duc_charter_constraints](schema.md#duc_charter_constraints): table · 0 rows
 - [duc_charter_decision_issue_ids](schema.md#duc_charter_decision_issue_ids): table · 0 rows
 - [duc_charter_decisions](schema.md#duc_charter_decisions): table · 0 rows
+- [duc_charter_phase_history](schema.md#duc_charter_phase_history): table · 0 rows
 - [duc_charter_requirement_acceptance_criteria](schema.md#duc_charter_requirement_acceptance_criteria): table · 0 rows
 - [duc_charter_requirements](schema.md#duc_charter_requirements): table · 0 rows
 - [duc_charter_stakeholders](schema.md#duc_charter_stakeholders): table · 0 rows
