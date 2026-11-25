@@ -140,11 +140,6 @@ def validate_skills(skills_root: Path) -> list[dict[str, str]]:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Package Scopture skills and MCP for Copilot Cowork.")
     parser.add_argument("--version", required=True)
-    parser.add_argument(
-        "--oauth-reference-id",
-        required=True,
-        help="Microsoft OAuth configuration reference ID created for Scopture",
-    )
     parser.add_argument("--plugin-dir", default="microsoft-plugin")
     parser.add_argument("--skills-dir", default=".release-staging/skills")
     parser.add_argument("--out-dir", default="dist")
@@ -168,11 +163,6 @@ def main() -> int:
     mcp_url = mcp_server.get("url", "")
     if mcp_server.get("type") != "http" or not mcp_url.startswith("https://"):
         raise ValueError("The Microsoft connector requires an HTTPS remote MCP server")
-    oauth_reference_id = args.oauth_reference_id.strip()
-    if not oauth_reference_id:
-        raise ValueError("A valid Microsoft OAuth configuration reference ID is required")
-    if len(oauth_reference_id) > 128:
-        raise ValueError("The Microsoft OAuth configuration reference ID must be 128 characters or fewer")
 
     out_dir.mkdir(parents=True, exist_ok=True)
     output_zip = out_dir / f"microsoft-scopture-plugin-{version}.zip"
@@ -197,10 +187,8 @@ def main() -> int:
         manifest["agentSkills"] = skill_entries
         remote_mcp_server = manifest["agentConnectors"][0]["toolSource"]["remoteMcpServer"]
         remote_mcp_server["mcpServerUrl"] = mcp_url
-        remote_mcp_server["authorization"] = {
-            "type": "OAuthPluginVault",
-            "referenceId": oauth_reference_id,
-        }
+        # Cowork performs DCR automatically when the connector omits authorization.
+        remote_mcp_server.pop("authorization", None)
         manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
         package_root_contents_zip(package_root, output_zip)
 

@@ -3,7 +3,6 @@
 
 import argparse
 import json
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -18,14 +17,7 @@ def main() -> int:
     parser.add_argument("--version", default=source_version, help="Release version (defaults to the source plugin version)")
     parser.add_argument("--out-dir", default="dist", help="Directory for release archives")
     parser.add_argument("--staging-dir", default=".release-staging/skills", help="Directory for shared versioned skills")
-    parser.add_argument(
-        "--microsoft-oauth-reference-id",
-        default=os.environ.get("MICROSOFT_OAUTH_REFERENCE_ID"),
-        help="Microsoft OAuth configuration reference ID (or set MICROSOFT_OAUTH_REFERENCE_ID)",
-    )
     args = parser.parse_args()
-    if not args.microsoft_oauth_reference_id:
-        parser.error("--microsoft-oauth-reference-id or MICROSOFT_OAUTH_REFERENCE_ID is required")
     version = args.version.lstrip("v")
 
     provider_commands = []
@@ -40,8 +32,6 @@ def main() -> int:
             "--out-dir",
             args.out_dir,
         ]
-        if package_script.parent.name == "microsoft":
-            command.extend(["--oauth-reference-id", args.microsoft_oauth_reference_id])
         provider_commands.append(command)
 
     commands = [

@@ -4,9 +4,6 @@ inputs:
   version:
     description: Semantic-release version to embed in every package.
     required: true
-  microsoft-oauth-reference-id:
-    description: Microsoft OAuth configuration reference ID created for Scopture. The Microsoft archive is omitted if unavailable.
-    required: false
   staging-dir:
     description: Temporary directory for the shared versioned skills.
     required: false
@@ -64,7 +61,6 @@ runs:
       continue-on-error: true
       with:
         version: ${{ inputs.version }}
-        oauth-reference-id: ${{ inputs.microsoft-oauth-reference-id }}
         skills-dir: ${{ inputs.staging-dir }}
         output-dir: ${{ inputs.output-dir }}
     - name: Remove incomplete provider packages
