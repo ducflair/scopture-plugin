@@ -1,0 +1,29 @@
+{
+  "name": "app-6a2aa7768fe881919ad20644669ca2fe",
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Scopture",
+        "shortDescription": "Work on engineering projects",
+        "developerName": "Ducflair",
+        "category": "Productivity",
+        "capabilities": [
+          "Read",
+          "Write"
+        ],
+        "websiteURL": "https://site.scopture.com/",
+        "supportURL": "https://site.scopture.com/support",
+        "privacyPolicyURL": "https://site.scopture.com/p/privacy",
+        "termsOfServiceURL": "https://site.scopture.com/p/terms",
+        "logo": "./assets/icon.png",
+        "composerIcon": "./assets/icon.png",
+        "icon": "./assets/icon.png",
+        "defaultPrompt": [
+          "What's the current state of the project?",
+          "Pin an issue to the gearbox asking whether the latest mount change affected shaft alignment or clearances.",
+          "Add a luxury hotel reception to the Empire State on a new drawing and verify the 3D model."
+        ]
+      }
+    }
+  }
+}

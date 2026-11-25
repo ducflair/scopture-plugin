@@ -14,11 +14,119 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from urllib.parse import urlparse
+from package_common import merge_json_objects
 
 RESERVED_NAMES = {"claude", "anthropic", "official", "plugin", "mcp", "test"}
 PLUGIN_NAME_REGEX = re.compile(r"^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$")
+AGENT_PLUGIN_NAME_REGEX = re.compile(r"^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$")
 FORBIDDEN_FILES = {".DS_Store", "Thumbs.db", "desktop.ini", "__MACOSX"}
 MAX_FILE_BYTES = 5 * 1024 * 1024  # 5 MiB
+
+
+def validate_portable_agent_plugin(plugin_dir: Path) -> tuple[list[str], list[str]]:
+    """Validate the repository-root Agent Plugins package used by directories."""
+    errors = []
+    notes = []
+    manifest_path = plugin_dir / "plugin.json"
+    mcp_path = plugin_dir / "mcp.json"
+    if not manifest_path.is_file():
+        errors.append("Missing required root 'plugin.json' portable manifest.")
+        return errors, notes
+    if not mcp_path.is_file():
+        errors.append("Missing required root 'mcp.json' MCP configuration.")
+        return errors, notes
+
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except Exception as e:
+        return [f"Root plugin.json is not valid JSON: {e}"], notes
+
+    if not isinstance(manifest, dict):
+        errors.append("Root plugin.json must contain a JSON object.")
+        manifest = {}
+    allowed_manifest_fields = {
+        "$schema", "name", "version", "description", "author", "homepage",
+        "repository", "license", "keywords", "extensions",
+    }
+    unknown_manifest_fields = set(manifest) - allowed_manifest_fields
+    if unknown_manifest_fields:
+        errors.append(f"Root plugin.json contains unsupported fields: {', '.join(sorted(unknown_manifest_fields))}.")
+    if manifest.get("$schema") != "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json":
+        errors.append("Root plugin.json must target the Agent Plugins 1.0.0 schema.")
+    name = manifest.get("name")
+    if not isinstance(name, str) or not name or not AGENT_PLUGIN_NAME_REGEX.fullmatch(name) or "--" in name or ".." in name:
+        errors.append("Root plugin.json 'name' must use lowercase letters, numbers, hyphens, or periods and start/end alphanumerically.")
+    for field in ("version", "description", "homepage", "repository", "license"):
+        if field in manifest and not isinstance(manifest[field], str):
+            errors.append(f"Root plugin.json '{field}' must be a string.")
+    author = manifest.get("author")
+    if author is not None and (
+        not isinstance(author, dict)
+        or set(author) - {"name", "email", "url"}
+        or any(not isinstance(value, str) for value in author.values())
+    ):
+        errors.append("Root plugin.json 'author' must contain only string name, email, or url fields.")
+    keywords = manifest.get("keywords")
+    if keywords is not None and (
+        not isinstance(keywords, list) or any(not isinstance(keyword, str) for keyword in keywords)
+    ):
+        errors.append("Root plugin.json 'keywords' must be an array of strings.")
+    extensions = manifest.get("extensions")
+    if extensions is not None and (
+        not isinstance(extensions, dict)
+        or any(not isinstance(value, dict) for value in extensions.values())
+    ):
+        errors.append("Root plugin.json 'extensions' must map namespaces to objects.")
+
+    try:
+        mcp = json.loads(mcp_path.read_text(encoding="utf-8"))
+    except Exception as e:
+        return errors + [f"Root mcp.json is not valid JSON: {e}"], notes
+
+    if not isinstance(mcp, dict):
+        errors.append("Root mcp.json must contain a JSON object.")
+        mcp = {}
+    if set(mcp) - {"$schema", "mcpServers"}:
+        errors.append("Root mcp.json may contain only '$schema' and 'mcpServers'.")
+    if mcp.get("$schema") != "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json":
+        errors.append("Root mcp.json must target the Agent Plugins 1.0.0 MCP schema.")
+    servers = mcp.get("mcpServers")
+    if not isinstance(servers, dict) or not servers:
+        errors.append("Root mcp.json must define at least one MCP server.")
+    else:
+        for server_name, server in servers.items():
+            if not isinstance(server, dict):
+                errors.append(f"MCP server '{server_name}' must be a configuration object.")
+                continue
+            if server.get("type") not in ("streamable-http", "sse"):
+                errors.append(f"MCP server '{server_name}' must use a supported remote transport.")
+            if set(server) - {"type", "url", "headers"}:
+                errors.append(f"MCP server '{server_name}' contains fields not supported by the remote transport.")
+            url = server.get("url")
+            parsed_url = urlparse(url) if isinstance(url, str) else None
+            if (
+                parsed_url is None
+                or parsed_url.scheme != "https"
+                or not parsed_url.netloc
+                or parsed_url.username is not None
+                or parsed_url.password is not None
+                or parsed_url.fragment
+            ):
+                errors.append(f"MCP server '{server_name}' must use an absolute HTTPS URL without credentials or a fragment.")
+            headers = server.get("headers")
+            if headers is not None and (
+                not isinstance(headers, dict)
+                or any(not isinstance(key, str) or not isinstance(value, str) for key, value in headers.items())
+            ):
+                errors.append(f"MCP server '{server_name}' headers must be string key/value pairs.")
+
+    if not (plugin_dir / "README.md").is_file():
+        errors.append("Portable Agent Plugins package is missing root README.md.")
+    if errors:
+        return errors, notes
+    notes.append("Root Agent Plugins manifest and remote MCP configuration are valid.")
+    return errors, notes
 
 
 def count_non_code_words(markdown_text: str) -> int:
@@ -37,16 +145,47 @@ def validate_openai_plugin(plugin_dir: Path) -> tuple[list[str], list[str]]:
     if not plugin_dir.is_dir():
         return [f"OpenAI plugin directory not found: {plugin_dir}"], notes
 
-    # 1. Manifest plugin.json
-    manifest_path = plugin_dir / "plugin.json"
-    if not manifest_path.is_file():
-        errors.append("Missing required 'plugin.json' at root of OpenAI plugin directory.")
+    # 1. Compose the release manifest from the shared base and OpenAI-only overlay.
+    base_manifest_path = plugin_dir.parent / "plugin.json"
+    overlay_path = plugin_dir / "manifest-overlay.json"
+    if not base_manifest_path.is_file():
+        errors.append("Missing shared root 'plugin.json' manifest.")
+        return errors, notes
+    if not overlay_path.is_file():
+        errors.append("Missing OpenAI 'manifest-overlay.json'.")
         return errors, notes
 
     try:
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        base_manifest = json.loads(base_manifest_path.read_text(encoding="utf-8"))
+        overlay = json.loads(overlay_path.read_text(encoding="utf-8"))
     except Exception as e:
-        return [f"plugin.json is not valid JSON: {e}"], notes
+        return [f"Shared manifest or OpenAI overlay is not valid JSON: {e}"], notes
+
+    if not isinstance(base_manifest, dict) or not isinstance(overlay, dict):
+        return ["Shared manifest and OpenAI overlay must both be JSON objects."], notes
+    if set(overlay) - {"name", "extensions"}:
+        errors.append("OpenAI manifest overlay may override only 'name' and 'extensions'.")
+    overlay_extensions = overlay.get("extensions", {})
+    if not isinstance(overlay_extensions, dict) or set(overlay_extensions) - {"com.openai"}:
+        errors.append("OpenAI manifest overlay may contain only the 'com.openai' extension object.")
+    try:
+        manifest = merge_json_objects(base_manifest, overlay)
+    except TypeError as e:
+        return errors + [str(e)], notes
+
+    merged_extensions = manifest.get("extensions", {})
+    merged_openai_extension = (
+        merged_extensions.get("com.openai", {}) if isinstance(merged_extensions, dict) else {}
+    )
+    openai_interface = (
+        merged_openai_extension.get("interface", {})
+        if isinstance(merged_openai_extension, dict)
+        else {}
+    )
+    if isinstance(openai_interface, dict):
+        openai_interface.setdefault("longDescription", manifest.get("description", ""))
+    if (plugin_dir / "plugin.json").exists() or (plugin_dir / "mcp.json").exists():
+        errors.append("OpenAI source must not duplicate the shared root plugin.json or mcp.json.")
 
     # Schema check
     if manifest.get("$schema") != "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json":
@@ -75,7 +214,8 @@ def validate_openai_plugin(plugin_dir: Path) -> tuple[list[str], list[str]]:
         errors.append("plugin.json missing author object with 'name' field.")
 
     # com.openai extensions
-    ext = manifest.get("extensions", {}).get("com.openai", {})
+    extensions = manifest.get("extensions", {})
+    ext = extensions.get("com.openai", {}) if isinstance(extensions, dict) else {}
     if not ext:
         errors.append("plugin.json missing 'extensions.com.openai' object.")
     else:
@@ -110,9 +250,9 @@ def validate_openai_plugin(plugin_dir: Path) -> tuple[list[str], list[str]]:
                     errors.append("OpenAI plugin missing app icon asset (required by OpenAI portal).")
 
     # 2. mcp.json
-    mcp_path = plugin_dir / "mcp.json"
+    mcp_path = plugin_dir.parent / "mcp.json"
     if not mcp_path.is_file():
-        errors.append("Missing required 'mcp.json' at root of OpenAI plugin directory.")
+        errors.append("Missing shared root 'mcp.json' MCP configuration.")
     else:
         try:
             mcp = json.loads(mcp_path.read_text(encoding="utf-8"))
@@ -394,6 +534,20 @@ def main() -> int:
     print("Validating plugin and MCP server packages...\n")
 
     total_errors = 0
+
+    # Validate the portable package scanned by Grok Bot and Cursor directories.
+    print("Validating repository-root Agent Plugins package:")
+    portable_errors, portable_notes = validate_portable_agent_plugin(repo_root)
+    if portable_errors:
+        total_errors += len(portable_errors)
+        print("  ✗ Root Agent Plugins validation FAILED:")
+        for err in portable_errors:
+            print(f"      - {err}")
+    else:
+        print("  ✓ Root Agent Plugins package: PASSED")
+        for note in portable_notes:
+            print(f"      ({note})")
+    print()
 
     # Validate OpenAI Plugin
     print(f"Validating OpenAI plugin at {openai_dir.relative_to(repo_root)}:")

@@ -25,6 +25,8 @@ This plugin connects to Scopture's streamable HTTP MCP server:
 - **URL**: `https://api.scopture.com/mcp`
 - **Protocol**: Model Context Protocol (MCP) streamable-http with OAuth 2.0 Dynamic Client Registration (DCR).
 
+The release ZIP uses the shared root `plugin.json` and `mcp.json`, merged with this folder's `manifest-overlay.json` for OpenAI-specific metadata.
+
 ## License
 
 This plugin is released under the [MIT License](LICENSE).

@@ -12,6 +12,21 @@ from pathlib import Path
 IGNORED_FILE_NAMES = {".DS_Store", "Thumbs.db", "desktop.ini", "__MACOSX"}
 
 
+def merge_json_objects(base: dict, overlay: dict) -> dict:
+    """Recursively merge a provider overlay onto a shared JSON object."""
+    if not isinstance(base, dict) or not isinstance(overlay, dict):
+        raise TypeError("Manifest base and overlay must be JSON objects")
+
+    merged = dict(base)
+    for key, value in overlay.items():
+        previous = merged.get(key)
+        if isinstance(previous, dict) and isinstance(value, dict):
+            merged[key] = merge_json_objects(previous, value)
+        else:
+            merged[key] = value
+    return merged
+
+
 def update_frontmatter_version(content: str, version: str) -> str:
     """Inject or update version strictly inside YAML frontmatter metadata."""
     match = re.match(r"^---\r?\n(.*?)\r?\n---(?:\r?\n|$)(.*)", content, re.DOTALL)

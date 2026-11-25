@@ -30,7 +30,10 @@ module.exports = {
           'dist/*.tar.gz',
           'dist/*.zip',
           'dist/*.pdf',
-          'dist/checksums.txt',
+          {
+            path: 'dist/checksums.txt',
+            name: 'checksums-${nextRelease.version}.txt',
+          },
           'server.json',
         ],
       },
